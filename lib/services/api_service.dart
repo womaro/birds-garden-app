@@ -20,4 +20,13 @@ class ApiService {
     final res = await _dio.get('/species');
     return List<Map<String, dynamic>>.from(res.data);
   }
+
+  Future<Map<String, dynamic>> getSpeciesStory(
+    String species, String lang) async {
+      final res = await _dio.get(
+        '/species/${Uri.encodeComponent(species)}/story',
+        queryParameters: {'lang': lang},
+      );
+      return Map<String, dynamic>.from(res.data);
+    }
 }

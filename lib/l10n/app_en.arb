@@ -101,5 +101,10 @@
   "detectionsCount": "{count} detections",
   "@detectionsCount": {
   "placeholders": { "count": { "type": "int" } }
+  },
+  "storyGenerating": "Writing story...",
+  "aiGeneratedOn": "✨ AI · {date}",
+  "@aiGeneratedOn": {
+    "placeholders": { "date": { "type": "String" } }
   }
 }
