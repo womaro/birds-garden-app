@@ -83,5 +83,23 @@
   "freq3": "regular",
   "freq4": "frequent",
   "freq5": "very frequent",
-  "aiPlaceholderLabel": "placeholder · AI coming soon"
+  "aiPlaceholderLabel": "placeholder · AI coming soon",
+  "heatmapTitle": "When birds visit your garden",
+  "blockDawn": "Dawn",
+  "blockMorning": "Morning",
+  "blockMidday": "Midday",
+  "blockAfternoon": "Aft.",
+  "blockEvening": "Evening",
+  "dayToday": "Today",
+  "dayYesterday": "Yesterday",
+  "visitsThisWeek": "visits this week",
+  "mostActiveTime": "Most active time",
+  "noHeatmapData": "No data from last 7 days",
+  "legendFew": "few",
+  "legendMany": "many",
+  "speciesThisWeek": "Species this week",
+  "detectionsCount": "{count} detections",
+  "@detectionsCount": {
+  "placeholders": { "count": { "type": "int" } }
+  }
 }
