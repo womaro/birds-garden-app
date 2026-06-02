@@ -1,0 +1,87 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "birds.garden",
+  "tabGarden": "Garden",
+  "tabActivity": "Activity",
+  "tabSpecies": "Species",
+  "tabLive": "Live",
+
+  "statusActive": "Good time to observe",
+  "statusModerate": "Moderate activity",
+  "statusQuiet": "Garden quiet",
+  "statusActiveSub": "{species} active",
+  "@statusActiveSub": {
+    "placeholders": { "species": { "type": "String" } }
+  },
+  "statusModerateSub": "a few birds nearby",
+  "statusQuietSub": "no activity for >1h",
+  "goToGarden": "Go to garden →",
+
+  "learningTitle": "Learning your garden",
+  "learningSubtitle": "{count} detections so far · predictions coming soon",
+  "@learningSubtitle": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "speciesCount": "species today",
+  "visitsCount": "visits today",
+  "activityChart": "activity · last 8h",
+  "recentDetections": "recent detections",
+
+  "noConnection": "No connection",
+  "tryAgain": "Try again",
+  "gardenSilent": "Garden silent",
+  "birdsComing": "Birds will arrive soon 🐦",
+
+  "timeNow": "now",
+  "timeMinAgo": "{count} min ago",
+  "@timeMinAgo": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "timeHoursAgo": "{count}h ago",
+  "@timeHoursAgo": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "settingsLanguage": "Language",
+  "langPolish": "Polish",
+  "langEnglish": "English",
+
+  "comingSoon": "Coming soon",
+  "heatmapsAvailable": "Available after 4+ weeks of data",
+  "speciesDescription": "Your garden birds",
+  "speciesListSoon": "Species list + AI story cards",
+  "cameraOffline": "Camera unavailable",
+  "cameraInstallNote": "Available after Reolink installation",
+  "offline": "offline",
+  "online": "online",
+
+  "searchHint": "Search species...",
+  "rareBadge": "rare",
+  "noSpeciesYet": "No detections yet",
+  "noSpeciesSubtitle": "Start the system to detect birds",
+
+  "yourSpecies": "Your {species}",
+  "@yourSpecies": {
+    "placeholders": { "species": { "type": "String" } }
+  },
+  "visitsLabel": "visits",
+  "favTimeLabel": "favorite time",
+  "daysLabel": "days in garden",
+  "storyCardTitle": "Your garden · today",
+  "photosTitle": "Photos from your garden",
+  "noPhotosYet": "Photos will appear after camera installation",
+  "biologyTitle": "Biology & behavior",
+  "sizeLabel": "Size",
+  "dietLabel": "Diet",
+  "breedingLabel": "Breeding season",
+  "voiceLabel": "Song",
+  "playCallButton": "♪ play call",
+  "freq1": "rare visitor",
+  "freq2": "occasional",
+  "freq3": "regular",
+  "freq4": "frequent",
+  "freq5": "very frequent",
+  "aiPlaceholderLabel": "placeholder · AI coming soon"
+}

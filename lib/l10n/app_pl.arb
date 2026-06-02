@@ -1,0 +1,87 @@
+{
+  "@@locale": "pl",
+
+  "appTitle": "birds.garden",
+  "tabGarden": "Ogród",
+  "tabActivity": "Aktywność",
+  "tabSpecies": "Gatunki",
+  "tabLive": "Live",
+
+  "statusActive": "Dobry czas na obserwację",
+  "statusModerate": "Umiarkowana aktywność",
+  "statusQuiet": "Spokojnie w ogrodzie",
+  "statusActiveSub": "{species} aktywny",
+  "@statusActiveSub": {
+    "placeholders": { "species": { "type": "String" } }
+  },
+  "statusModerateSub": "kilka ptaków w pobliżu",
+  "statusQuietSub": "brak aktywności od >1h",
+  "goToGarden": "Wyjdź do ogrodu →",
+
+  "learningTitle": "Zbieram dane o twoim ogrodzie",
+  "learningSubtitle": "{count} detekcji od początku · za kilka dni zacznę przewidywać aktywność",
+  "@learningSubtitle": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "speciesCount": "gatunki dziś",
+  "visitsCount": "wizyty dziś",
+  "activityChart": "aktywność · ostatnie 8h",
+  "recentDetections": "ostatnie detekcje",
+
+  "noConnection": "Brak połączenia",
+  "tryAgain": "Spróbuj ponownie",
+  "gardenSilent": "Ogród cichy",
+  "birdsComing": "Ptaki zaraz przylecą 🐦",
+
+  "timeNow": "teraz",
+  "timeMinAgo": "{count} min temu",
+  "@timeMinAgo": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "timeHoursAgo": "{count}h temu",
+  "@timeHoursAgo": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "settingsLanguage": "Język",
+  "langPolish": "Polski",
+  "langEnglish": "Angielski",
+
+  "comingSoon": "W budowie",
+  "heatmapsAvailable": "Dostępne po 4+ tygodniach danych",
+  "speciesDescription": "Twoje ptaki z ogrodu",
+  "speciesListSoon": "Lista gatunków + story cards AI",
+  "cameraOffline": "Kamera niedostępna",
+  "cameraInstallNote": "Dostępne po instalacji Reolink",
+  "offline": "offline",
+  "online": "online",
+
+  "searchHint": "Szukaj gatunku...",
+  "rareBadge": "rzadki",
+  "noSpeciesYet": "Brak detekcji",
+  "noSpeciesSubtitle": "Uruchom system by wykrywać ptaki",
+
+  "yourSpecies": "Twój {species}",
+  "@yourSpecies": {
+    "placeholders": { "species": { "type": "String" } }
+  },
+  "visitsLabel": "wizyt",
+  "favTimeLabel": "ulubiona pora",
+  "daysLabel": "dni w ogrodzie",
+  "storyCardTitle": "Twój ogród · dzisiaj",
+  "photosTitle": "Zdjęcia z twojego ogrodu",
+  "noPhotosYet": "Zdjęcia pojawią się po instalacji kamery",
+  "biologyTitle": "Biologia i zachowanie",
+  "sizeLabel": "Rozmiar",
+  "dietLabel": "Dieta",
+  "breedingLabel": "Sezon lęgowy",
+  "voiceLabel": "Głos",
+  "playCallButton": "♪ odtwórz śpiew",
+  "freq1": "rzadki gość",
+  "freq2": "sporadyczny",
+  "freq3": "regularny",
+  "freq4": "częsty",
+  "freq5": "bardzo częsty",
+  "aiPlaceholderLabel": "placeholder · AI wkrótce"
+}
