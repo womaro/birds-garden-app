@@ -6,8 +6,10 @@ import '../data/bird_biology.dart';
 import '../models/species_summary.dart';
 import '../providers/locale_provider.dart';
 import '../providers/species_detail_provider.dart';
+import '../providers/species_trend_provider.dart';
 import '../providers/story_provider.dart';
 import '../theme.dart';
+import '../widgets/trend_line_chart.dart';
 
 class GatunekDetailScreen extends ConsumerStatefulWidget {
   final SpeciesSummary species;
@@ -157,6 +159,37 @@ class _GatunekDetailScreenState
                     error: (_, __) => const SizedBox.shrink(),
                     data: (detail) =>
                         _HourlyChart(histogram: detail.hourlyHistogram),
+                  ),
+
+                  // ── Trend 7 dni ────────────────────────────────────
+                  const SizedBox(height: 14),
+                  Text(l10n.trendTitle,
+                      style: const TextStyle(
+                          fontSize: 11, color: AppTheme.textSecondary)),
+                  const SizedBox(height: 8),
+                  ref.watch(speciesTrendProvider(widget.species.name)).when(
+                    loading: () => Container(
+                      height: 80,
+                      decoration: BoxDecoration(
+                          color: AppTheme.bgSecondary,
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    error: (_, __) => const SizedBox.shrink(),
+                    data: (counts) {
+                      final now    = DateTime.now();
+                      final labels = List.generate(7, (i) {
+                        final d = now.subtract(Duration(days: 6 - i));
+                        if (i == 6) return lang == 'pl' ? 'Dziś' : 'Today';
+                        return '${d.day}/${d.month}';
+                      });
+                      return Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10)),
+                        child: TrendLineChart(data: counts, labels: labels, height: 60),
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
 

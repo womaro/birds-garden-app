@@ -135,5 +135,8 @@
   "onboarding4Step1Sub": "Mikrofon i łącznik z siecią",
   "onboarding4Step2Sub": "Kamera IP z wbudowanym mikrofonem",
   "onboarding4Step3Sub": "Podłącz oba urządzenia do routera",
-  "onboarding4Demo": "Na razie możesz przeglądać dane demo z naszego ogrodu."
+  "onboarding4Demo": "Na razie możesz przeglądać dane demo z naszego ogrodu.",
+
+  "trendTitle": "trend · ostatnie 7 dni",
+  "rankingTitle": "ranking · ten tydzień"
 }

@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../data/bird_biology.dart';
 import '../models/detection.dart';
 import '../providers/detections_provider.dart';
+import '../providers/locale_provider.dart';
+import '../providers/species_provider.dart';
 import '../theme.dart';
 
 // ── Time blocks ────────────────────────────────────────────────────────────
@@ -46,7 +48,7 @@ class AktywnoscScreen extends ConsumerWidget {
 
 // ── Content ────────────────────────────────────────────────────────────────
 
-class _AktywnoscContent extends StatelessWidget {
+class _AktywnoscContent extends ConsumerWidget {
   final List<Detection> detections;
   final AppLocalizations l10n;
   const _AktywnoscContent({required this.detections, required this.l10n});
@@ -309,7 +311,7 @@ class _AktywnoscContent extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final grid    = _grid;
     final total   = _totalWeek;
     final bestBlk = _mostActiveBlock;
@@ -376,6 +378,13 @@ class _AktywnoscContent extends StatelessWidget {
             }).toList(),
           ),
         ],
+        const SizedBox(height: 14),
+
+        // ── Ranking gatunków ──────────────────────────────────────────
+        _SpeciesRanking(
+          detections: detections,
+          l10n: l10n,
+        ),
       ],
     );
   }
@@ -574,4 +583,104 @@ class _SummaryTile extends StatelessWidget {
       ]),
     ),
   );
+}
+
+// ── Species ranking ────────────────────────────────────────────────────────
+
+class _SpeciesRanking extends ConsumerWidget {
+  final List<Detection> detections;
+  final AppLocalizations l10n;
+  const _SpeciesRanking({required this.detections, required this.l10n});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang         = ref.watch(localeProvider).languageCode;
+    final speciesState = ref.watch(speciesProvider);
+
+    return speciesState.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (allSpecies) {
+        final weekSpecies = allSpecies
+            .where((s) => DateTime.now().difference(s.lastSeen).inDays < 7)
+            .take(5)
+            .toList();
+
+        if (weekSpecies.isEmpty) return const SizedBox.shrink();
+
+        final maxVisits = weekSpecies.first.visits.clamp(1, 9999);
+
+        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(l10n.rankingTitle,
+              style: const TextStyle(
+                  fontSize: 11, color: AppTheme.textSecondary)),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              children: weekSpecies.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final s   = entry.value;
+                final bio = kBirdBiology[s.name];
+                final displayName = lang == 'pl'
+                    ? (bio?.polishName ?? s.name)
+                    : s.name;
+                final ratio = s.visits / maxVisits;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(children: [
+                    SizedBox(
+                      width: 20,
+                      child: Text('${idx + 1}',
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: idx == 0
+                                  ? AppTheme.primary
+                                  : AppTheme.textTertiary)),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          Expanded(
+                            child: Text(displayName,
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500)),
+                          ),
+                          Text('${s.visits}',
+                              style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppTheme.textSecondary)),
+                        ]),
+                        const SizedBox(height: 3),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(2),
+                          child: LinearProgressIndicator(
+                            value: ratio,
+                            minHeight: 4,
+                            backgroundColor: AppTheme.primaryLight,
+                            valueColor: AlwaysStoppedAnimation(
+                              idx == 0 ? AppTheme.primary : AppTheme.primaryMid,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )),
+                  ]),
+                );
+              }).toList(),
+            ),
+          ),
+        ]);
+      },
+    );
+  }
 }

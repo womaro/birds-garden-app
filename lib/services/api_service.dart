@@ -37,4 +37,19 @@ class ApiService {
     );
     return Map<String, dynamic>.from(res.data);
   }
+
+  Future<List<Map<String, dynamic>>> getDailyActivity({int days = 7}) async {
+    final res = await _dio.get('/activity/daily',
+        queryParameters: {'days': days});
+    return List<Map<String, dynamic>>.from(res.data);
+  }
+
+  Future<List<Map<String, dynamic>>> getSpeciesTrend(
+      String species, {int days = 7}) async {
+    final res = await _dio.get(
+      '/species/${Uri.encodeComponent(species)}/trend',
+      queryParameters: {'days': days},
+    );
+    return List<Map<String, dynamic>>.from(res.data);
+  }
 }

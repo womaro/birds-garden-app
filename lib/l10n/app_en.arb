@@ -135,5 +135,8 @@
   "onboarding4Step1Sub": "Microphone and network bridge",
   "onboarding4Step2Sub": "IP camera with built-in microphone",
   "onboarding4Step3Sub": "Connect both devices to your router",
-  "onboarding4Demo": "For now you can browse demo data from our garden."
+  "onboarding4Demo": "For now you can browse demo data from our garden.",
+
+  "trendTitle": "trend · last 7 days",
+  "rankingTitle": "ranking · this week"
 }

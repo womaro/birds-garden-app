@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../data/bird_biology.dart';
 import '../models/detection.dart';
+import '../providers/daily_activity_provider.dart';
 import '../providers/detections_provider.dart';
 import '../providers/locale_provider.dart';
 import '../theme.dart';
+import '../widgets/trend_line_chart.dart';
 
 enum _Status { active, moderate, quiet }
 
@@ -126,6 +128,43 @@ class _OgrodContent extends ConsumerWidget {
             style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
         const SizedBox(height: 8),
         SizedBox(height: 44, child: _ActivityChart(bars: bars, maxBar: maxBar)),
+        const SizedBox(height: 14),
+
+        // ── Trend 7 dni ───────────────────────────────────────────────
+        Text(l10n.trendTitle,
+            style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+        const SizedBox(height: 8),
+        Consumer(
+          builder: (ctx, ref, _) {
+            final trendState = ref.watch(dailyActivityProvider);
+            return trendState.when(
+              loading: () => Container(
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppTheme.bgSecondary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              error: (_, __) => const SizedBox.shrink(),
+              data: (counts) {
+                final now  = DateTime.now();
+                final labels = List.generate(7, (i) {
+                  final d = now.subtract(Duration(days: 6 - i));
+                  if (i == 6) return l10n.dayToday.substring(0, 2);
+                  return '${d.day}/${d.month}';
+                });
+                return Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: TrendLineChart(data: counts, labels: labels, height: 60),
+                );
+              },
+            );
+          },
+        ),
         const SizedBox(height: 14),
 
         if (recent.isNotEmpty) ...[
