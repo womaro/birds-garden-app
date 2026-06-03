@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:bird_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../data/bird_biology.dart';
 import '../models/detection.dart';
 import '../providers/detections_provider.dart';
 import '../providers/locale_provider.dart';
@@ -81,51 +83,6 @@ class _OgrodContent extends ConsumerWidget {
     });
   }
 
-  void _showLanguagePicker(BuildContext context, WidgetRef ref) {
-    final l10n     = AppLocalizations.of(context)!;
-    final notifier = ref.read(localeProvider.notifier);
-    final current  = ref.read(localeProvider).languageCode;
-
-    showModalBottomSheet(
-      context: context,
-      builder: (sheet) {
-        final labels = {'pl': l10n.langPolish, 'en': l10n.langEnglish};
-        final flags  = {'pl': '🇵🇱', 'en': '🇬🇧'};
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 36, height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(l10n.settingsLanguage,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            ),
-            ...supportedLocales.map((locale) => ListTile(
-              leading: Text(flags[locale.languageCode] ?? '',
-                  style: const TextStyle(fontSize: 24)),
-              title: Text(labels[locale.languageCode] ?? locale.languageCode),
-              trailing: current == locale.languageCode
-                  ? const Icon(Icons.check, color: AppTheme.primary)
-                  : null,
-              onTap: () {
-                notifier.setLocale(locale);
-                Navigator.pop(sheet);
-              },
-            )),
-            const SizedBox(height: 16),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n   = AppLocalizations.of(context)!;
@@ -144,9 +101,9 @@ class _OgrodContent extends ConsumerWidget {
             Text(l10n.appTitle,
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             IconButton(
-              icon: const Icon(Icons.settings_outlined, size: 20,
-                  color: AppTheme.textSecondary),
-              onPressed: () => _showLanguagePicker(context, ref),
+              icon: const Icon(Icons.settings_outlined,
+                  size: 20, color: AppTheme.textSecondary),
+              onPressed: () => context.push('/settings'),
             ),
           ],
         ),
@@ -257,9 +214,7 @@ class _StatusCard extends StatelessWidget {
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(title,
                 style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: titleColor)),
+                    fontSize: 14, fontWeight: FontWeight.w600, color: titleColor)),
             if (sub.isNotEmpty)
               Text(sub,
                   style: TextStyle(fontSize: 11, color: titleColor.withAlpha(180))),
@@ -343,7 +298,7 @@ class _ActivityChart extends StatelessWidget {
 
 // ── Detection row ──────────────────────────────────────────────────────────
 
-class _DetectionRow extends StatelessWidget {
+class _DetectionRow extends ConsumerWidget {
   final Detection detection;
   const _DetectionRow({required this.detection});
 
@@ -355,14 +310,6 @@ class _DetectionRow extends StatelessWidget {
   Color get _avatarColor =>
       _colors[detection.species.hashCode.abs() % _colors.length];
 
-  String get _initials {
-    final parts = detection.species.split(' ');
-    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    return detection.species
-        .substring(0, detection.species.length.clamp(0, 2))
-        .toUpperCase();
-  }
-
   String _relTime(AppLocalizations l10n) {
     final diff = DateTime.now().difference(detection.timestamp);
     if (diff.inMinutes < 1)  return l10n.timeNow;
@@ -372,8 +319,21 @@ class _DetectionRow extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final lang = ref.watch(localeProvider).languageCode;
+    final bio  = kBirdBiology[detection.species];
+
+    final displayName = lang == 'pl'
+        ? (bio?.polishName ?? detection.species)
+        : detection.species;
+
+    final initials = () {
+      final parts = displayName.split(' ');
+      if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      return displayName.substring(0, displayName.length.clamp(0, 2)).toUpperCase();
+    }();
+
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -383,7 +343,7 @@ class _DetectionRow extends StatelessWidget {
         CircleAvatar(
           radius: 18,
           backgroundColor: _avatarColor,
-          child: Text(_initials,
+          child: Text(initials,
               style: const TextStyle(
                   color: Colors.white,
                   fontSize: 11,
@@ -391,7 +351,7 @@ class _DetectionRow extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(detection.species,
+          Text(displayName,
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
           Text(_relTime(l10n),
               style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),

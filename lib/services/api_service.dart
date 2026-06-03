@@ -2,7 +2,10 @@ import 'package:dio/dio.dart';
 
 class ApiService {
   static const _base = 'https://birds.garden';
-  static const _key  = 'bird-secret-2026-xK9mP';
+  static const _key  = String.fromEnvironment(
+    'API_KEY',
+    defaultValue: 'bird-secret-2026-xK9mP',
+  );
 
   final _dio = Dio(BaseOptions(
     baseUrl: _base,
@@ -21,12 +24,17 @@ class ApiService {
     return List<Map<String, dynamic>>.from(res.data);
   }
 
+  Future<Map<String, dynamic>> getSpeciesDetail(String species) async {
+    final res = await _dio.get('/species/${Uri.encodeComponent(species)}');
+    return Map<String, dynamic>.from(res.data);
+  }
+
   Future<Map<String, dynamic>> getSpeciesStory(
-    String species, String lang) async {
-      final res = await _dio.get(
-        '/species/${Uri.encodeComponent(species)}/story',
-        queryParameters: {'lang': lang},
-      );
-      return Map<String, dynamic>.from(res.data);
-    }
+      String species, String lang) async {
+    final res = await _dio.get(
+      '/species/${Uri.encodeComponent(species)}/story',
+      queryParameters: {'lang': lang},
+    );
+    return Map<String, dynamic>.from(res.data);
+  }
 }

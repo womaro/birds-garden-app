@@ -7,10 +7,12 @@ import 'screens/aktywnosc_screen.dart';
 import 'screens/gatunki_screen.dart';
 import 'screens/gatunek_detail_screen.dart';
 import 'screens/live_screen.dart';
+import 'screens/settings_screen.dart';
 
 final router = GoRouter(
   initialLocation: '/ogrod',
   routes: [
+    // ── 4 zakładki ──────────────────────────────────────────────────
     StatefulShellRoute.indexedStack(
       builder: (context, state, shell) => _NavScaffold(shell: shell),
       branches: [
@@ -38,6 +40,12 @@ final router = GoRouter(
           GoRoute(path: '/live', builder: (c, s) => const LiveScreen()),
         ]),
       ],
+    ),
+
+    // ── Settings (poza zakładkami — bez bottom nav) ──────────────────
+    GoRoute(
+      path: '/settings',
+      builder: (c, s) => const SettingsScreen(),
     ),
   ],
 );

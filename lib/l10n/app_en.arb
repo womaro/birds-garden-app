@@ -106,5 +106,13 @@
   "aiGeneratedOn": "✨ AI · {date}",
   "@aiGeneratedOn": {
     "placeholders": { "date": { "type": "String" } }
+  },
+  "settingsTitle": "Settings",
+  "settingsAbout": "About",
+  "settingsVersion": "Version",
+  "chartHourlyTitle": "activity · by hour",
+  "yourSpeciesFem": "Your {species}",
+  "@yourSpeciesFem": {
+    "placeholders": { "species": { "type": "String" } }
   }
 }

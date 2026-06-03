@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../data/bird_biology.dart';
 import '../models/species_summary.dart';
+import '../providers/locale_provider.dart';
 import '../providers/species_provider.dart';
 import '../theme.dart';
 
@@ -27,6 +28,7 @@ class _GatunkiScreenState extends ConsumerState<GatunkiScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n  = AppLocalizations.of(context)!;
+    final lang  = ref.watch(localeProvider).languageCode;
     final state = ref.watch(speciesProvider);
 
     return Scaffold(
@@ -45,10 +47,8 @@ class _GatunkiScreenState extends ConsumerState<GatunkiScreen> {
                 onChanged: (v) => setState(() => _query = v),
                 decoration: InputDecoration(
                   hintText: l10n.searchHint,
-                  hintStyle: const TextStyle(
-                      fontSize: 13, color: AppTheme.textTertiary),
-                  prefixIcon: const Icon(Icons.search,
-                      size: 18, color: AppTheme.textTertiary),
+                  hintStyle: const TextStyle(fontSize: 13, color: AppTheme.textTertiary),
+                  prefixIcon: const Icon(Icons.search, size: 18, color: AppTheme.textTertiary),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -71,17 +71,13 @@ class _GatunkiScreenState extends ConsumerState<GatunkiScreen> {
                     ? species
                     : species.where((s) {
                         final bio = kBirdBiology[s.name];
-                        return (bio?.polishName ?? s.name)
-                                .toLowerCase()
-                                .contains(_query.toLowerCase()) ||
-                            s.name
-                                .toLowerCase()
-                                .contains(_query.toLowerCase());
+                        final plName = bio?.polishName ?? '';
+                        return plName.toLowerCase().contains(_query.toLowerCase()) ||
+                            s.name.toLowerCase().contains(_query.toLowerCase());
                       }).toList();
 
                 if (filtered.isEmpty) {
-                  return _EmptyState(
-                      l10n: l10n, hasQuery: _query.isNotEmpty);
+                  return _EmptyState(l10n: l10n, hasQuery: _query.isNotEmpty);
                 }
 
                 return ListView.builder(
@@ -89,10 +85,8 @@ class _GatunkiScreenState extends ConsumerState<GatunkiScreen> {
                   itemCount: filtered.length,
                   itemBuilder: (_, i) => _SpeciesRow(
                     summary: filtered[i],
-                    onTap: () => context.push(
-                      '/gatunki/detail',
-                      extra: filtered[i],
-                    ),
+                    lang: lang,
+                    onTap: () => context.push('/gatunki/detail', extra: filtered[i]),
                   ),
                 );
               },
@@ -108,8 +102,13 @@ class _GatunkiScreenState extends ConsumerState<GatunkiScreen> {
 
 class _SpeciesRow extends StatelessWidget {
   final SpeciesSummary summary;
+  final String lang;
   final VoidCallback onTap;
-  const _SpeciesRow({required this.summary, required this.onTap});
+  const _SpeciesRow({
+    required this.summary,
+    required this.lang,
+    required this.onTap,
+  });
 
   static const _colors = [
     AppTheme.primary, AppTheme.primaryMid, AppTheme.primaryDark,
@@ -120,9 +119,15 @@ class _SpeciesRow extends StatelessWidget {
   Color get _avatarColor =>
       _colors[summary.name.hashCode.abs() % _colors.length];
 
-  String get _initials {
-    final bio  = kBirdBiology[summary.name];
-    final name = bio?.polishName ?? summary.name;
+  String _displayName() {
+    final bio = kBirdBiology[summary.name];
+    return lang == 'pl'
+        ? (bio?.polishName ?? summary.name)
+        : summary.name;
+  }
+
+  String _initials() {
+    final name  = _displayName();
     final parts = name.split(' ');
     return parts.length >= 2
         ? '${parts[0][0]}${parts[1][0]}'.toUpperCase()
@@ -139,9 +144,7 @@ class _SpeciesRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n        = AppLocalizations.of(context)!;
-    final bio         = kBirdBiology[summary.name];
-    final displayName = bio?.polishName ?? summary.name;
+    final l10n = AppLocalizations.of(context)!;
 
     return GestureDetector(
       onTap: onTap,
@@ -154,7 +157,7 @@ class _SpeciesRow extends StatelessWidget {
           CircleAvatar(
             radius: 22,
             backgroundColor: _avatarColor,
-            child: Text(_initials,
+            child: Text(_initials(),
                 style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,
@@ -164,7 +167,7 @@ class _SpeciesRow extends StatelessWidget {
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
               Expanded(
-                child: Text(displayName,
+                child: Text(_displayName(),
                     style: const TextStyle(
                         fontSize: 14, fontWeight: FontWeight.w500)),
               ),

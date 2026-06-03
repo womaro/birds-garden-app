@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../data/bird_biology.dart';
 import '../models/species_summary.dart';
 import '../providers/locale_provider.dart';
+import '../providers/species_detail_provider.dart';
 import '../providers/story_provider.dart';
 import '../theme.dart';
 
@@ -31,13 +32,31 @@ class _GatunekDetailScreenState
     return '${dt.day} ${m[dt.month]}';
   }
 
+  String _fallbackStory(BirdBiology? bio) {
+    final name = bio?.polishName ?? widget.species.name;
+    final v    = widget.species.visits;
+    if (v >= 50) return '$name to jeden z twoich stałych gości — $v wizyt.';
+    if (v >= 10) return '$name regularnie odwiedza ogród ($v wizyt).';
+    return '$name zawitał do twojego ogrodu $v ${v == 1 ? 'raz' : 'razy'}.';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final l10n  = AppLocalizations.of(context)!;
-    final bio   = kBirdBiology[widget.species.name];
-    final lang  = ref.watch(localeProvider).languageCode;
-    final story = ref.watch(storyProvider((widget.species.name, lang)));
-    final displayName = bio?.polishName ?? widget.species.name;
+    final l10n        = AppLocalizations.of(context)!;
+    final bio         = kBirdBiology[widget.species.name];
+    final lang        = ref.watch(localeProvider).languageCode;
+    final story       = ref.watch(storyProvider((widget.species.name, lang)));
+    final detailState = ref.watch(speciesDetailProvider(widget.species.name));
+
+    // Nazwa w odpowiednim języku
+    final displayName = lang == 'pl'
+        ? (bio?.polishName ?? widget.species.name)
+        : widget.species.name;
+
+    // Tytuł z właściwym rodzajem gramatycznym
+    final title = (lang == 'pl' && bio?.gender == 'f')
+        ? l10n.yourSpeciesFem(displayName)
+        : l10n.yourSpecies(displayName);
 
     final freqLabel = switch (widget.species.starRating) {
       1 => l10n.freq1, 2 => l10n.freq2, 3 => l10n.freq3,
@@ -66,14 +85,15 @@ class _GatunekDetailScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Title + stars ────────────────────────────────────
+
+                  // ── Title + stars ──────────────────────────────────
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(l10n.yourSpecies(displayName),
+                          Text(title,
                               style: const TextStyle(
                                   fontSize: 22, fontWeight: FontWeight.w600)),
                           if (bio != null) ...[
@@ -87,26 +107,28 @@ class _GatunekDetailScreenState
                         ],
                       )),
                       const SizedBox(width: 8),
-                      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                        Row(children: List.generate(5, (i) => Icon(
-                          i < widget.species.starRating
-                              ? Icons.star_rounded
-                              : Icons.star_outline_rounded,
-                          size: 17,
-                          color: i < widget.species.starRating
-                              ? AppTheme.primary
-                              : AppTheme.primaryPale,
-                        ))),
-                        const SizedBox(height: 2),
-                        Text(freqLabel,
-                            style: const TextStyle(
-                                fontSize: 10, color: AppTheme.textTertiary)),
-                      ]),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Row(children: List.generate(5, (i) => Icon(
+                            i < widget.species.starRating
+                                ? Icons.star_rounded
+                                : Icons.star_outline_rounded,
+                            size: 17,
+                            color: i < widget.species.starRating
+                                ? AppTheme.primary
+                                : AppTheme.primaryPale,
+                          ))),
+                          const SizedBox(height: 2),
+                          Text(freqLabel, style: const TextStyle(
+                              fontSize: 10, color: AppTheme.textTertiary)),
+                        ],
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Stats ────────────────────────────────────────────
+                  // ── Stats ──────────────────────────────────────────
                   Row(children: [
                     _StatBox(value: '${widget.species.visits}',
                         label: l10n.visitsLabel),
@@ -119,7 +141,26 @@ class _GatunekDetailScreenState
                   ]),
                   const SizedBox(height: 16),
 
-                  // ── Story card ───────────────────────────────────────
+                  // ── Wykres 24h ─────────────────────────────────────
+                  Text(l10n.chartHourlyTitle,
+                      style: const TextStyle(
+                          fontSize: 11, color: AppTheme.textSecondary)),
+                  const SizedBox(height: 8),
+                  detailState.when(
+                    loading: () => Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: AppTheme.bgSecondary,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    error: (_, __) => const SizedBox.shrink(),
+                    data: (detail) =>
+                        _HourlyChart(histogram: detail.hourlyHistogram),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ── Story card ─────────────────────────────────────
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -139,13 +180,11 @@ class _GatunekDetailScreenState
                                   fontWeight: FontWeight.w600,
                                   color: AppTheme.primaryDark)),
                           const Spacer(),
-                          // Badge dynamiczny
                           story.when(
-                            loading: () => _SmallBadge(
-                                text: l10n.storyGenerating,
-                                pulse: true),
-                            error: (_, __) => _SmallBadge(
-                                text: l10n.aiPlaceholderLabel),
+                            loading: () =>
+                                _SmallBadge(text: l10n.storyGenerating),
+                            error: (_, __) =>
+                                _SmallBadge(text: l10n.aiPlaceholderLabel),
                             data: (data) => _SmallBadge(
                                 text: l10n.aiGeneratedOn(
                                     _shortDate(
@@ -154,43 +193,38 @@ class _GatunekDetailScreenState
                           ),
                         ]),
                         const SizedBox(height: 10),
-
-                        // Story text
                         story.when(
                           loading: () => const _StoryShimmer(),
-                          error: (_, __) => Text(
-                            _fallbackStory(bio),
-                            style: const TextStyle(
-                                fontSize: 13,
-                                color: AppTheme.primaryDark,
-                                height: 1.55),
-                          ),
+                          error: (_, __) => Text(_fallbackStory(bio),
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppTheme.primaryDark,
+                                  height: 1.55)),
                           data: (data) => Text(
-                            data['story'] as String? ?? '',
-                            style: const TextStyle(
-                                fontSize: 13,
-                                color: AppTheme.primaryDark,
-                                height: 1.55),
-                          ),
+                              data['story'] as String? ?? '',
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppTheme.primaryDark,
+                                  height: 1.55)),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Photos ───────────────────────────────────────────
-                  Text(l10n.photosTitle,
-                      style: const TextStyle(
-                          fontSize: 11, color: AppTheme.textSecondary)),
+                  // ── Photos ─────────────────────────────────────────
+                  Text(l10n.photosTitle, style: const TextStyle(
+                      fontSize: 11, color: AppTheme.textSecondary)),
                   const SizedBox(height: 8),
                   _PhotoGrid(noPhotosLabel: l10n.noPhotosYet),
                   const SizedBox(height: 16),
 
-                  // ── Biology ──────────────────────────────────────────
+                  // ── Biology ────────────────────────────────────────
                   if (bio != null)
                     _BiologyAccordion(
                       bio: bio,
                       l10n: l10n,
+                      lang: lang,
                       expanded: _bioExpanded,
                       onToggle: () =>
                           setState(() => _bioExpanded = !_bioExpanded),
@@ -204,16 +238,53 @@ class _GatunekDetailScreenState
       ),
     );
   }
+}
 
-  String _fallbackStory(BirdBiology? bio) {
-    final name = bio?.polishName ?? widget.species.name;
-    final v    = widget.species.visits;
-    if (v >= 50) {
-      return '$name to jeden z twoich stałych gości — $v wizyt od początku monitorowania.';
-    } else if (v >= 10) {
-      return '$name regularnie odwiedza ogród ($v wizyt).';
-    }
-    return '$name zawitał do twojego ogrodu $v ${v == 1 ? 'raz' : 'razy'}.';
+// ── 24h chart ──────────────────────────────────────────────────────────────
+
+class _HourlyChart extends StatelessWidget {
+  final List<int> histogram;
+  const _HourlyChart({required this.histogram});
+
+  Color _barColor(double ratio) {
+    if (ratio == 0)   return AppTheme.primaryLight;
+    if (ratio < 0.35) return AppTheme.primaryPale;
+    if (ratio < 0.70) return AppTheme.primaryMid;
+    return AppTheme.primary;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final max = histogram.fold(0, (m, v) => v > m ? v : m).clamp(1, 9999);
+    return Column(children: [
+      SizedBox(
+        height: 44,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: List.generate(24, (h) {
+            final ratio = histogram[h] / max;
+            return Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 0.5),
+                height: (ratio * 44).clamp(2, 44),
+                decoration: BoxDecoration(
+                  color: _barColor(ratio),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
+      const SizedBox(height: 4),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: ['0', '6', '12', '18', '24'].map((h) =>
+          Text(h, style: const TextStyle(
+              fontSize: 9, color: AppTheme.textTertiary)),
+        ).toList(),
+      ),
+    ]);
   }
 }
 
@@ -235,16 +306,17 @@ class _PhotoHeader extends StatelessWidget {
     child: Stack(children: [
       Center(child: Icon(Icons.camera_alt_outlined, size: 52,
           color: Colors.white.withAlpha(60))),
-      Positioned(bottom: 10, right: 12,
+      Positioned(
+        bottom: 10, right: 12,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: Colors.black.withAlpha(100),
-            borderRadius: BorderRadius.circular(6),
-          ),
+              color: Colors.black.withAlpha(100),
+              borderRadius: BorderRadius.circular(6)),
           child: const Text('foto po instalacji kamery',
               style: TextStyle(fontSize: 10, color: Colors.white70)),
-        )),
+        ),
+      ),
     ]),
   );
 }
@@ -253,7 +325,6 @@ class _PhotoHeader extends StatelessWidget {
 
 class _StoryShimmer extends StatefulWidget {
   const _StoryShimmer();
-
   @override
   State<_StoryShimmer> createState() => _StoryShimmerState();
 }
@@ -269,15 +340,12 @@ class _StoryShimmerState extends State<_StoryShimmer>
     _ctrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 900))
       ..repeat(reverse: true);
-    _anim = Tween(begin: 0.25, end: 0.75).animate(
-        CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+    _anim = Tween(begin: 0.25, end: 0.75)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
+  void dispose() { _ctrl.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
@@ -287,8 +355,7 @@ class _StoryShimmerState extends State<_StoryShimmer>
       children: [100, 140, 120, 90].map((w) => Padding(
         padding: const EdgeInsets.only(bottom: 6),
         child: Container(
-          height: 11,
-          width: w.toDouble(),
+          height: 11, width: w.toDouble(),
           decoration: BoxDecoration(
             color: AppTheme.primaryPale.withOpacity(_anim.value),
             borderRadius: BorderRadius.circular(4),
@@ -303,18 +370,15 @@ class _StoryShimmerState extends State<_StoryShimmer>
 
 class _SmallBadge extends StatelessWidget {
   final String text;
-  final bool pulse;
-  const _SmallBadge({required this.text, this.pulse = false});
+  const _SmallBadge({required this.text});
 
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
     decoration: BoxDecoration(
-      color: AppTheme.primaryPale,
-      borderRadius: BorderRadius.circular(4),
-    ),
-    child: Text(text,
-        style: const TextStyle(fontSize: 8, color: AppTheme.primaryDark)),
+        color: AppTheme.primaryPale, borderRadius: BorderRadius.circular(4)),
+    child: Text(text, style: const TextStyle(
+        fontSize: 8, color: AppTheme.primaryDark)),
   );
 }
 
@@ -329,7 +393,8 @@ class _StatBox extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       decoration: BoxDecoration(
-          color: AppTheme.bgSecondary, borderRadius: BorderRadius.circular(8)),
+          color: AppTheme.bgSecondary,
+          borderRadius: BorderRadius.circular(8)),
       child: Column(children: [
         Text(value, style: const TextStyle(
             fontSize: 20, fontWeight: FontWeight.w600)),
@@ -342,7 +407,7 @@ class _StatBox extends StatelessWidget {
   );
 }
 
-// ── Photo grid placeholder ─────────────────────────────────────────────────
+// ── Photo grid ─────────────────────────────────────────────────────────────
 
 class _PhotoGrid extends StatelessWidget {
   final String noPhotosLabel;
@@ -368,11 +433,16 @@ class _PhotoGrid extends StatelessWidget {
 class _BiologyAccordion extends StatelessWidget {
   final BirdBiology bio;
   final AppLocalizations l10n;
+  final String lang;
   final bool expanded;
   final VoidCallback onToggle;
+
   const _BiologyAccordion({
-    required this.bio, required this.l10n,
-    required this.expanded, required this.onToggle,
+    required this.bio,
+    required this.l10n,
+    required this.lang,
+    required this.expanded,
+    required this.onToggle,
   });
 
   @override
@@ -392,8 +462,10 @@ class _BiologyAccordion extends StatelessWidget {
           Text(l10n.biologyTitle, style: const TextStyle(
               fontSize: 13, fontWeight: FontWeight.w500)),
           const Spacer(),
-          Icon(expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-              size: 18, color: AppTheme.textSecondary),
+          Icon(
+            expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+            size: 18, color: AppTheme.textSecondary,
+          ),
         ]),
       ),
     ),
@@ -410,11 +482,21 @@ class _BiologyAccordion extends StatelessWidget {
           ),
         ),
         child: Column(children: [
-          _BioRow(label: l10n.sizeLabel,     value: bio.size),
-          _BioRow(label: l10n.dietLabel,     value: bio.diet),
-          _BioRow(label: l10n.breedingLabel, value: bio.breeding),
-          _BioRow(label: l10n.voiceLabel,    value: l10n.playCallButton,
-              valueColor: AppTheme.primary, isLast: true),
+          _BioRow(label: l10n.sizeLabel, value: bio.size),
+          _BioRow(
+            label: l10n.dietLabel,
+            value: lang == 'pl' ? bio.diet : bio.dietEn,
+          ),
+          _BioRow(
+            label: l10n.breedingLabel,
+            value: lang == 'pl' ? bio.breeding : bio.breedingEn,
+          ),
+          _BioRow(
+            label: l10n.voiceLabel,
+            value: l10n.playCallButton,
+            valueColor: AppTheme.primary,
+            isLast: true,
+          ),
         ]),
       ),
   ]);
@@ -424,14 +506,20 @@ class _BioRow extends StatelessWidget {
   final String label, value;
   final Color? valueColor;
   final bool isLast;
-  const _BioRow({required this.label, required this.value,
-      this.valueColor, this.isLast = false});
+  const _BioRow({
+    required this.label,
+    required this.value,
+    this.valueColor,
+    this.isLast = false,
+  });
 
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(vertical: 8),
-    decoration: isLast ? null : const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0x0F000000)))),
+    decoration: isLast
+        ? null
+        : const BoxDecoration(
+            border: Border(bottom: BorderSide(color: Color(0x0F000000)))),
     child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
       Text(label, style: const TextStyle(
           fontSize: 12, color: AppTheme.textSecondary)),
@@ -439,7 +527,8 @@ class _BioRow extends StatelessWidget {
           fontSize: 12,
           color: valueColor ?? AppTheme.textPrimary,
           fontWeight: valueColor != null
-              ? FontWeight.w500 : FontWeight.normal)),
+              ? FontWeight.w500
+              : FontWeight.normal)),
     ]),
   );
 }
