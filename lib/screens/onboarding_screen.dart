@@ -298,8 +298,8 @@ class _Page3 extends StatelessWidget {
   const _Page3({required this.l10n, required this.ctrl});
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+  Widget build(BuildContext context) => SingleChildScrollView(
+    padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -139,123 +139,131 @@ class _AktywnoscContent extends StatelessWidget {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Handle
-            Center(
-              child: Container(
-                width: 36, height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // Header
-            Row(children: [
-              Expanded(child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('$dayLabel · $blockLbl',
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w600)),
-                  Text(block.hours,
-                      style: const TextStyle(
-                          fontSize: 12, color: AppTheme.textSecondary)),
-                ],
-              )),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryLight,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  l10n.detectionsCount(total),
-                  style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.primary),
-                ),
-              ),
-            ]),
-            const SizedBox(height: 14),
-            const Divider(height: 1),
-            const SizedBox(height: 10),
-
-            // Species list
-            ...sorted.map((e) {
-              final bio  = kBirdBiology[e.key];
-              final name = bio?.polishName ?? e.key;
-              final ratio = e.value / maxVal;
-
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(children: [
-                  // Avatar
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: _avatarColor(e.key),
-                    child: Text(_initials(name),
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600)),
+      builder: (_) => ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.6,
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Handle
+                Center(
+                  child: Container(
+                    width: 36, height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                  const SizedBox(width: 10),
+                ),
+                const SizedBox(height: 14),
 
-                  // Name + bar
+                // Header
+                Row(children: [
                   Expanded(child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name,
+                      Text('$dayLabel · $blockLbl',
                           style: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w500)),
-                      const SizedBox(height: 3),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(2),
-                        child: LinearProgressIndicator(
-                          value: ratio,
-                          minHeight: 5,
-                          backgroundColor: AppTheme.primaryLight,
-                          valueColor: const AlwaysStoppedAnimation(
-                              AppTheme.primary),
-                        ),
-                      ),
+                              fontSize: 15, fontWeight: FontWeight.w600)),
+                      Text(block.hours,
+                          style: const TextStyle(
+                              fontSize: 12, color: AppTheme.textSecondary)),
                     ],
                   )),
-                  const SizedBox(width: 10),
-
-                  // Count badge
                   Container(
-                    width: 28,
-                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.bgSecondary,
-                      borderRadius: BorderRadius.circular(4),
+                      color: AppTheme.primaryLight,
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    alignment: Alignment.center,
-                    child: Text('${e.value}',
-                        style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.primaryDark)),
+                    child: Text(
+                      l10n.detectionsCount(total),
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primary),
+                    ),
                   ),
                 ]),
-              );
-            }),
-          ],
+                const SizedBox(height: 14),
+                const Divider(height: 1),
+                const SizedBox(height: 10),
+
+                // Species list
+                ...sorted.map((e) {
+                  final bio  = kBirdBiology[e.key];
+                  final name = bio?.polishName ?? e.key;
+                  final ratio = e.value / maxVal;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Row(children: [
+                      // Avatar
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: _avatarColor(e.key),
+                        child: Text(_initials(name),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600)),
+                      ),
+                      const SizedBox(width: 10),
+
+                      // Name + bar
+                      Expanded(child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(name,
+                              style: const TextStyle(
+                                  fontSize: 13, fontWeight: FontWeight.w500)),
+                          const SizedBox(height: 3),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(2),
+                            child: LinearProgressIndicator(
+                              value: ratio,
+                              minHeight: 5,
+                              backgroundColor: AppTheme.primaryLight,
+                              valueColor: const AlwaysStoppedAnimation(
+                                  AppTheme.primary),
+                            ),
+                          ),
+                        ],
+                      )),
+                      const SizedBox(width: 10),
+
+                      // Count badge
+                      Container(
+                        width: 28,
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppTheme.bgSecondary,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text('${e.value}',
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.primaryDark)),
+                      ),
+                    ]),
+                  );
+                }),
+              ],
+            ),
+          ),
         ),
       ),
     );
