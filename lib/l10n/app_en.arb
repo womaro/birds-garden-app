@@ -114,5 +114,26 @@
   "yourSpeciesFem": "Your {species}",
   "@yourSpeciesFem": {
     "placeholders": { "species": { "type": "String" } }
-  }
+  },
+
+  "onboardingSkip": "Skip",
+  "onboardingNext": "Next",
+  "onboardingGetStarted": "Let's go!",
+  "onboarding1Title": "Intelligent garden monitoring",
+  "onboarding1Subtitle": "Not just a feeder — the whole garden, around the clock. Detects and identifies birds by audio and vision.",
+  "onboarding2Title": "What you'll see",
+  "onboarding2Subtitle": "Three screens full of data about your garden.",
+  "onboarding2Ogrod": "Garden status and live recent detections",
+  "onboarding2Aktywnosc": "Heatmap — when birds visit your garden",
+  "onboarding2Gatunki": "Your birds + AI story cards",
+  "onboarding3Title": "Your garden",
+  "onboarding3Subtitle": "What would you like to call it?",
+  "onboarding3Hint": "e.g. Backyard in Warsaw",
+  "onboarding3Note": "You can change the name later in Settings",
+  "onboarding4Title": "Start watching",
+  "onboarding4Subtitle": "For full monitoring you need:",
+  "onboarding4Step1Sub": "Microphone and network bridge",
+  "onboarding4Step2Sub": "IP camera with built-in microphone",
+  "onboarding4Step3Sub": "Connect both devices to your router",
+  "onboarding4Demo": "For now you can browse demo data from our garden."
 }

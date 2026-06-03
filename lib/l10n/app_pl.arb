@@ -114,5 +114,26 @@
   "yourSpeciesFem": "Twoja {species}",
   "@yourSpeciesFem": {
     "placeholders": { "species": { "type": "String" } }
-  }
+  },
+
+  "onboardingSkip": "Pomiń",
+  "onboardingNext": "Dalej",
+  "onboardingGetStarted": "Zaczynamy!",
+  "onboarding1Title": "Inteligentny monitoring ogrodu",
+  "onboarding1Subtitle": "Nie tylko karmnik — cały ogród, przez całą dobę. Wykrywa i identyfikuje ptaki audio i wizualnie.",
+  "onboarding2Title": "Co zobaczysz",
+  "onboarding2Subtitle": "Trzy ekrany pełne danych o twoim ogrodzie.",
+  "onboarding2Ogrod": "Status ogrodu i ostatnie detekcje na żywo",
+  "onboarding2Aktywnosc": "Heatmapa — kiedy ptaki odwiedzają ogród",
+  "onboarding2Gatunki": "Twoje ptaki + AI story cards",
+  "onboarding3Title": "Twój ogród",
+  "onboarding3Subtitle": "Jak chcesz go nazwać?",
+  "onboarding3Hint": "np. Ogród w Warszawie",
+  "onboarding3Note": "Możesz zmienić nazwę później w Ustawieniach",
+  "onboarding4Title": "Zacznij obserwować",
+  "onboarding4Subtitle": "Do pełnego monitoringu potrzebujesz:",
+  "onboarding4Step1Sub": "Mikrofon i łącznik z siecią",
+  "onboarding4Step2Sub": "Kamera IP z wbudowanym mikrofonem",
+  "onboarding4Step3Sub": "Podłącz oba urządzenia do routera",
+  "onboarding4Demo": "Na razie możesz przeglądać dane demo z naszego ogrodu."
 }

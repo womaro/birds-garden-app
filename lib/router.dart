@@ -8,9 +8,10 @@ import 'screens/gatunki_screen.dart';
 import 'screens/gatunek_detail_screen.dart';
 import 'screens/live_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/onboarding_screen.dart';
 
-final router = GoRouter(
-  initialLocation: '/ogrod',
+GoRouter createRouter({required bool showOnboarding}) => GoRouter(
+  initialLocation: showOnboarding ? '/onboarding' : '/ogrod',
   routes: [
     // ── 4 zakładki ──────────────────────────────────────────────────
     StatefulShellRoute.indexedStack(
@@ -42,10 +43,16 @@ final router = GoRouter(
       ],
     ),
 
-    // ── Settings (poza zakładkami — bez bottom nav) ──────────────────
+    // ── Settings ─────────────────────────────────────────────────────
     GoRoute(
       path: '/settings',
       builder: (c, s) => const SettingsScreen(),
+    ),
+
+    // ── Onboarding ────────────────────────────────────────────────────
+    GoRoute(
+      path: '/onboarding',
+      builder: (c, s) => const OnboardingScreen(),
     ),
   ],
 );
