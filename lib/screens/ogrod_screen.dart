@@ -10,14 +10,42 @@ import '../providers/detections_provider.dart';
 import '../providers/locale_provider.dart';
 import '../theme.dart';
 import '../widgets/trend_line_chart.dart';
+import '../providers/lifebird_provider.dart';
+import '../widgets/lifebird_overlay.dart';
 
 enum _Status { active, moderate, quiet }
 
-class OgrodScreen extends ConsumerWidget {
+class OgrodScreen extends ConsumerStatefulWidget {
   const OgrodScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OgrodScreen> createState() => _OgrodScreenState();
+}
+
+class _OgrodScreenState extends ConsumerState<OgrodScreen> {
+  @override
+  Widget build(BuildContext context) {
+    // Nasłuchuj nowych gatunków
+    ref.listen<String?>(lifebirdProvider, (_, newSpecies) {
+      if (newSpecies != null && mounted) {
+        showGeneralDialog(
+          context: context,
+          barrierColor: Colors.transparent,
+          barrierDismissible: false,
+          transitionDuration: Duration.zero,
+          pageBuilder: (_, __, ___) => LifebirdOverlay(
+            speciesName: newSpecies,
+            onDismiss: () {
+              Navigator.of(context).pop();
+              ref
+                  .read(lifebirdProvider.notifier)
+                  .markCelebrated(newSpecies);
+            },
+          ),
+        );
+      }
+    });
+
     final l10n  = AppLocalizations.of(context)!;
     final state = ref.watch(detectionsProvider);
 

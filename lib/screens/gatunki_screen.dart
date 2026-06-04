@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../data/bird_biology.dart';
+import '../data/card_data.dart';
 import '../models/species_summary.dart';
 import '../providers/locale_provider.dart';
 import '../providers/species_provider.dart';
 import '../theme.dart';
+import '../widgets/bird_card.dart';
 
 class GatunkiScreen extends ConsumerStatefulWidget {
   const GatunkiScreen({super.key});
@@ -17,7 +19,8 @@ class GatunkiScreen extends ConsumerStatefulWidget {
 }
 
 class _GatunkiScreenState extends ConsumerState<GatunkiScreen> {
-  String _query = '';
+  String _query    = '';
+  bool _isCardView = false;
 
   @override
   void initState() {
@@ -37,59 +40,85 @@ class _GatunkiScreenState extends ConsumerState<GatunkiScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(l10n.tabSpecies,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 2),
-              Text(l10n.speciesDescription,
-                  style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-              const SizedBox(height: 12),
-              TextField(
-                onChanged: (v) => setState(() => _query = v),
-                decoration: InputDecoration(
-                  hintText: l10n.searchHint,
-                  hintStyle: const TextStyle(fontSize: 13, color: AppTheme.textTertiary),
-                  prefixIcon: const Icon(Icons.search, size: 18, color: AppTheme.textTertiary),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(l10n.tabSpecies, style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w600)),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.bgSecondary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      _ToggleBtn(icon: Icons.view_list,
+                          active: !_isCardView,
+                          onTap: () => setState(() => _isCardView = false)),
+                      _ToggleBtn(icon: Icons.grid_view,
+                          active: _isCardView,
+                          onTap: () => setState(() => _isCardView = true)),
+                    ]),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                ),
+                ],
               ),
+              if (_isCardView)
+                state.maybeWhen(
+                  data: (species) => Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      lang == 'pl'
+                          ? '${species.length} / ${kAllPolishGardenBirds.length} odkrytych gatunków'
+                          : '${species.length} / ${kAllPolishGardenBirds.length} species discovered',
+                      style: const TextStyle(
+                          fontSize: 12, color: AppTheme.textSecondary),
+                    ),
+                  ),
+                  orElse: () => const SizedBox.shrink(),
+                )
+              else ...[
+                const SizedBox(height: 2),
+                Text(l10n.speciesDescription, style: const TextStyle(
+                    fontSize: 13, color: AppTheme.textSecondary)),
+                const SizedBox(height: 12),
+                TextField(
+                  onChanged: (v) => setState(() => _query = v),
+                  decoration: InputDecoration(
+                    hintText: l10n.searchHint,
+                    hintStyle: const TextStyle(
+                        fontSize: 13, color: AppTheme.textTertiary),
+                    prefixIcon: const Icon(Icons.search,
+                        size: 18, color: AppTheme.textTertiary),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                ),
+              ],
             ]),
           ),
           Expanded(
             child: state.when(
               loading: () => const Center(
-                child: CircularProgressIndicator(color: AppTheme.primary),
-              ),
+                  child: CircularProgressIndicator(color: AppTheme.primary)),
               error: (e, _) => Center(child: Text('$e')),
-              data: (species) {
-                final filtered = _query.isEmpty
-                    ? species
-                    : species.where((s) {
-                        final bio = kBirdBiology[s.name];
-                        final plName = bio?.polishName ?? '';
-                        return plName.toLowerCase().contains(_query.toLowerCase()) ||
-                            s.name.toLowerCase().contains(_query.toLowerCase());
-                      }).toList();
-
-                if (filtered.isEmpty) {
-                  return _EmptyState(l10n: l10n, hasQuery: _query.isNotEmpty);
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  itemCount: filtered.length,
-                  itemBuilder: (_, i) => _SpeciesRow(
-                    summary: filtered[i],
-                    lang: lang,
-                    onTap: () => context.push('/gatunki/detail', extra: filtered[i]),
-                  ),
-                );
-              },
+              data: (species) => _isCardView
+                  ? _CardGrid(
+                      detectedSpecies: species, lang: lang,
+                      onDetailTap: (s) =>
+                          context.push('/gatunki/detail', extra: s),
+                    )
+                  : _SpeciesList(
+                      species: species, lang: lang, query: _query,
+                      l10n: l10n,
+                      onTap: (s) =>
+                          context.push('/gatunki/detail', extra: s),
+                      onRefresh: () async =>
+                          ref.read(speciesProvider.notifier).load(),
+                    ),
             ),
           ),
         ]),
@@ -98,129 +127,171 @@ class _GatunkiScreenState extends ConsumerState<GatunkiScreen> {
   }
 }
 
-// ── Species row ────────────────────────────────────────────────────────────
-
-class _SpeciesRow extends StatelessWidget {
-  final SpeciesSummary summary;
-  final String lang;
+class _ToggleBtn extends StatelessWidget {
+  final IconData icon;
+  final bool active;
   final VoidCallback onTap;
-  const _SpeciesRow({
-    required this.summary,
-    required this.lang,
-    required this.onTap,
+  const _ToggleBtn(
+      {required this.icon, required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: active ? AppTheme.primary : Colors.transparent,
+        borderRadius: BorderRadius.circular(7),
+      ),
+      child: Icon(icon, size: 18,
+          color: active ? Colors.white : AppTheme.textSecondary),
+    ),
+  );
+}
+
+class _CardGrid extends StatelessWidget {
+  final List<SpeciesSummary> detectedSpecies;
+  final String lang;
+  final void Function(SpeciesSummary) onDetailTap;
+  const _CardGrid({
+    required this.detectedSpecies, required this.lang,
+    required this.onDetailTap,
   });
-
-  static const _colors = [
-    AppTheme.primary, AppTheme.primaryMid, AppTheme.primaryDark,
-    Color(0xFF2E7D32), Color(0xFF1565C0),
-    Color(0xFF6A1B9A), Color(0xFFD84315), Color(0xFF00695C),
-  ];
-
-  Color get _avatarColor =>
-      _colors[summary.name.hashCode.abs() % _colors.length];
-
-  String _displayName() {
-    final bio = kBirdBiology[summary.name];
-    return lang == 'pl'
-        ? (bio?.polishName ?? summary.name)
-        : summary.name;
-  }
-
-  String _initials() {
-    final name  = _displayName();
-    final parts = name.split(' ');
-    return parts.length >= 2
-        ? '${parts[0][0]}${parts[1][0]}'.toUpperCase()
-        : name.substring(0, name.length.clamp(0, 2)).toUpperCase();
-  }
-
-  String _lastSeen(AppLocalizations l10n) {
-    final diff = DateTime.now().difference(summary.lastSeen);
-    if (diff.inMinutes < 1)  return l10n.timeNow;
-    if (diff.inMinutes < 60) return l10n.timeMinAgo(diff.inMinutes);
-    if (diff.inHours < 24)   return l10n.timeHoursAgo(diff.inHours);
-    return DateFormat('d MMM').format(summary.lastSeen);
-  }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final detectedMap = {for (final s in detectedSpecies) s.name: s};
+    final unlocked =
+        kAllPolishGardenBirds.where((n) => detectedMap.containsKey(n)).toList();
+    final all = unlocked;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-            color: Colors.white, borderRadius: BorderRadius.circular(10)),
-        child: Row(children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: _avatarColor,
-            child: Text(_initials(),
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600)),
-          ),
-          const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Expanded(
-                child: Text(_displayName(),
-                    style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w500)),
-              ),
-              if (summary.isRare)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFEBEB),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(l10n.rareBadge,
-                      style: const TextStyle(
-                          fontSize: 9,
-                          color: Color(0xFFD32F2F),
-                          fontWeight: FontWeight.w600)),
-                ),
-            ]),
-            const SizedBox(height: 2),
-            Text(
-              '${summary.visits} ${l10n.visitsLabel} · ${_lastSeen(l10n)}',
-              style: const TextStyle(
-                  fontSize: 11, color: AppTheme.textSecondary),
-            ),
-          ])),
-          const SizedBox(width: 4),
-          const Icon(Icons.chevron_right, size: 18, color: AppTheme.textTertiary),
-        ]),
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.66,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
       ),
+      itemCount: all.length,
+      itemBuilder: (_, i) {
+        final name    = all[i];
+        final summary = detectedMap[name];
+        return BirdCard(
+          speciesName: name,
+          summary: summary,
+          lang: lang,
+          onDetailTap: summary != null ? () => onDetailTap(summary) : null,
+        );
+      },
     );
   }
 }
 
-// ── Empty state ────────────────────────────────────────────────────────────
-
-class _EmptyState extends StatelessWidget {
+class _SpeciesList extends StatelessWidget {
+  final List<SpeciesSummary> species;
+  final String lang;
+  final String query;
   final AppLocalizations l10n;
-  final bool hasQuery;
-  const _EmptyState({required this.l10n, required this.hasQuery});
+  final void Function(SpeciesSummary) onTap;
+  final Future<void> Function() onRefresh;
+  const _SpeciesList({
+    required this.species, required this.lang, required this.query,
+    required this.l10n, required this.onTap, required this.onRefresh,
+  });
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      const Icon(Icons.search_off, size: 48, color: AppTheme.textTertiary),
-      const SizedBox(height: 12),
-      Text(
-        hasQuery ? 'Brak wyników' : l10n.noSpeciesYet,
-        style: const TextStyle(
-            fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+  Widget build(BuildContext context) {
+    final filtered = query.isEmpty
+        ? species
+        : species.where((s) {
+            final bio = kBirdBiology[s.name];
+            return (bio?.polishName ?? '').toLowerCase()
+                    .contains(query.toLowerCase()) ||
+                s.name.toLowerCase().contains(query.toLowerCase());
+          }).toList();
+
+    if (filtered.isEmpty) {
+      return Center(
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          const Icon(Icons.search_off, size: 48, color: AppTheme.textTertiary),
+          const SizedBox(height: 12),
+          Text(query.isNotEmpty ? 'Brak wyników' : l10n.noSpeciesYet,
+              style: const TextStyle(color: AppTheme.textSecondary)),
+        ]),
+      );
+    }
+
+    return RefreshIndicator(
+      color: AppTheme.primary,
+      onRefresh: onRefresh,
+      child: ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      itemCount: filtered.length,
+      itemBuilder: (_, i) {
+        final s           = filtered[i];
+        final bio         = kBirdBiology[s.name];
+        final displayName = lang == 'pl'
+            ? (bio?.polishName ?? s.name) : s.name;
+        final diff     = DateTime.now().difference(s.lastSeen);
+        final lastSeen = diff.inMinutes < 60
+            ? l10n.timeMinAgo(diff.inMinutes)
+            : diff.inHours < 24
+                ? l10n.timeHoursAgo(diff.inHours)
+                : DateFormat('d MMM').format(s.lastSeen);
+
+        return GestureDetector(
+          onTap: () => onTap(s),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+                color: Colors.white, borderRadius: BorderRadius.circular(10)),
+            child: Row(children: [
+              Container(
+                width: 4, height: 36,
+                decoration: BoxDecoration(
+                  color: bio != null
+                      ? familyGradient(bio.family).first
+                      : AppTheme.primary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(displayName, style: const TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.w500)),
+                Text('${s.visits} ${l10n.visitsLabel} · $lastSeen',
+                    style: const TextStyle(
+                        fontSize: 11, color: AppTheme.textSecondary)),
+              ])),
+              if (bio != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 5, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: kRarityColor[bio.cardRarity]!.withAlpha(30),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    lang == 'pl'
+                        ? kRarityLabel[bio.cardRarity]!
+                        : kRarityLabelEn[bio.cardRarity]!,
+                    style: TextStyle(
+                        fontSize: 9,
+                        color: kRarityColor[bio.cardRarity],
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right,
+                  size: 18, color: AppTheme.textTertiary),
+            ]),
+          ),
+        );
+      },
       ),
-      const SizedBox(height: 4),
-      if (!hasQuery)
-        Text(l10n.noSpeciesSubtitle,
-            style: const TextStyle(fontSize: 12, color: AppTheme.textTertiary)),
-    ]),
-  );
+    );
+  }
 }
