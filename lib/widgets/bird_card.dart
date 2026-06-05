@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'bird_call_button.dart';
 import 'package:bird_app/l10n/app_localizations.dart';
 import '../data/bird_biology.dart';
 import '../data/card_data.dart';
@@ -409,30 +410,40 @@ class _CardBack extends StatelessWidget {
             const SizedBox(height: 4),
           ],
 
-          const SizedBox(height: 8),
-
-          // Przycisk szczegóły
-          GestureDetector(
-            onTap: onDetailTap,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white.withAlpha(20),
-                borderRadius: BorderRadius.circular(7),
-                border: Border.all(
-                    color: Colors.white.withAlpha(40), width: 0.5),
+          if (bio != null) ...[
+            const SizedBox(height: 8),
+            Row(children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: onDetailTap,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(20),
+                      borderRadius: BorderRadius.circular(7),
+                      border: Border.all(
+                          color: Colors.white.withAlpha(40), width: 0.5),
+                    ),
+                    child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Text(lang == 'pl' ? 'Szczegóły' : 'Details',
+                          style: const TextStyle(
+                              fontSize: 10, color: Colors.white,
+                              fontWeight: FontWeight.w500)),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.arrow_forward_ios,
+                          size: 8, color: Colors.white),
+                    ]),
+                  ),
+                ),
               ),
-              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text(lang == 'pl' ? 'Szczegóły' : 'Details',
-                    style: const TextStyle(
-                        fontSize: 10, color: Colors.white,
-                        fontWeight: FontWeight.w500)),
-                const SizedBox(width: 4),
-                const Icon(Icons.arrow_forward_ios, size: 8, color: Colors.white),
-              ]),
-            ),
-          ),
+              const SizedBox(width: 8),
+              BirdCallButton(
+                speciesName: bio.scientificName,
+                scientificName: bio.scientificName,
+                compact: true,
+              ),
+            ]),
+          ],
         ]),
       ),
     );

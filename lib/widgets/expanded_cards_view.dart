@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/species_summary.dart';
 import 'bird_card.dart';
 import 'bird_card_share.dart';
@@ -140,6 +141,17 @@ class _ExpandedCardsViewState extends State<ExpandedCardsView>
                             speciesName: widget.cards[i],
                             summary: widget.summaryMap[widget.cards[i]],
                             expanded: true,
+                            onDetailTap: () {
+                              final summary = widget.summaryMap[widget.cards[i]];
+                              _dismiss().then((_) {
+                                if (context.mounted) {
+                                  context.push(
+                                    '/gatunki/detail',
+                                    extra: summary,
+                                  );
+                                }
+                              });
+                            },
                           ),
                         ),
                       ),

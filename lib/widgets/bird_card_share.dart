@@ -49,9 +49,20 @@ class BirdCardShareButton extends ConsumerWidget {
 
   Future<void> _share(BuildContext context, String lang) async {
     try {
+      await Future.delayed(const Duration(milliseconds: 150));
+
       final boundary = captureKey.currentContext
           ?.findRenderObject() as RenderRepaintBoundary?;
-      if (boundary == null) return;
+
+      if (boundary == null) {
+        debugPrint('❌ Share: captureKey context is null');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Nie można przechwycić karty')),
+          );
+        }
+        return;
+      }
 
       final image = await boundary.toImage(pixelRatio: 3.0);
       final data  = await image.toByteData(format: ui.ImageByteFormat.png);

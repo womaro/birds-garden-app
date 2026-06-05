@@ -9,6 +9,7 @@ import '../providers/species_detail_provider.dart';
 import '../providers/species_trend_provider.dart';
 import '../providers/story_provider.dart';
 import '../theme.dart';
+import '../widgets/bird_call_button.dart';
 import '../widgets/trend_line_chart.dart';
 
 class GatunekDetailScreen extends ConsumerStatefulWidget {
@@ -524,11 +525,20 @@ class _BiologyAccordion extends StatelessWidget {
             label: l10n.breedingLabel,
             value: lang == 'pl' ? bio.breeding : bio.breedingEn,
           ),
-          _BioRow(
-            label: l10n.voiceLabel,
-            value: l10n.playCallButton,
-            valueColor: AppTheme.primary,
-            isLast: true,
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(l10n.voiceLabel,
+                    style: const TextStyle(
+                        fontSize: 12, color: AppTheme.textSecondary)),
+                BirdCallButton(
+                  speciesName: bio.scientificName,
+                  scientificName: bio.scientificName,
+                ),
+              ],
+            ),
           ),
         ]),
       ),
