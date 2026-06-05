@@ -177,6 +177,7 @@ class _CardFront extends StatelessWidget {
             letterSpacing: 1.0,
           ),
         ),
+
         // Family badge
         if (isUnlocked && bio != null) ...[
           const SizedBox(height: 4),
@@ -191,9 +192,7 @@ class _CardFront extends StatelessWidget {
                   ? (kFamilyNamePl[bio.family] ?? bio.family)
                   : (kFamilyNameEn[bio.family] ?? bio.family),
               style: const TextStyle(
-                  fontSize: 8,
-                  color: Colors.white70,
-                  letterSpacing: 0.3),
+                  fontSize: 8, color: Colors.white70, letterSpacing: 0.3),
             ),
           ),
         ],
@@ -237,8 +236,7 @@ class _CardFront extends StatelessWidget {
           _StatDots(label: '👁', count: 0, locked: true),
           const SizedBox(height: 6),
           Text('Nie wykryto',
-              style: TextStyle(
-                  fontSize: 8, color: Colors.white.withAlpha(40))),
+              style: TextStyle(fontSize: 8, color: Colors.white.withAlpha(40))),
         ],
       ]),
     );
@@ -284,78 +282,79 @@ class _CardBack extends StatelessWidget {
 
     return _CardShell(
       colors: colors,
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      // ── Overflow fix: SingleChildScrollView non-scrollable ──
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-        // Zdjęcie / placeholder
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: SizedBox(
-            height: expanded ? 140 : 80,
-            width: double.infinity,
-            child: hasPhoto
-                ? Image.asset(
-                    birdPhotoPath(speciesName),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _PhotoPlaceholder(lang: lang),
-                  )
-                : _PhotoPlaceholder(lang: lang),
-          ),
-        ),
-
-        const SizedBox(height: 8),
-
-        // Garden + wizyty
-        Text(
-          lang == 'pl' ? 'Twój ogród' : 'Your garden',
-          style: TextStyle(fontSize: 9, color: Colors.white.withAlpha(120)),
-        ),
-        Text(
-          lang == 'pl'
-              ? '${summary.visits} wizyt · ${summary.daysInGarden} dni'
-              : '${summary.visits} visits · ${summary.daysInGarden} days',
-          style: const TextStyle(
-              fontSize: 11, color: Colors.white,
-              fontWeight: FontWeight.w500),
-        ),
-
-        const SizedBox(height: 6),
-
-        // Data odkrycia
-        if (isRare && bio != null)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-            decoration: BoxDecoration(
-              color: kRarityColor[bio.cardRarity]!.withAlpha(40),
-              borderRadius: BorderRadius.circular(7),
-              border: Border.all(
-                  color: kRarityColor[bio.cardRarity]!.withAlpha(120),
-                  width: 0.5),
+          // Zdjęcie / placeholder
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox(
+              height: expanded ? 120 : 70,
+              width: double.infinity,
+              child: hasPhoto
+                  ? Image.asset(
+                      birdPhotoPath(speciesName),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          _PhotoPlaceholder(lang: lang),
+                    )
+                  : _PhotoPlaceholder(lang: lang),
             ),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.auto_awesome,
-                  size: 8, color: kRarityColor[bio.cardRarity]),
-              const SizedBox(width: 4),
-              Text(
-                '${lang == 'pl' ? 'ODKRYTO' : 'FOUND'}  '
-                '${_formatDate(summary.firstSeen)}',
-                style: TextStyle(
-                    fontSize: 8,
-                    color: kRarityColor[bio.cardRarity],
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3),
-              ),
-            ]),
-          )
-        else
-          Text(
-            '${lang == 'pl' ? 'od' : 'since'} '
-            '${_formatDate(summary.firstSeen)}',
-            style: TextStyle(fontSize: 9, color: Colors.white.withAlpha(100)),
           ),
+          const SizedBox(height: 8),
 
-        // ── Statystyki z opisami (tylko expanded) ────────────
-        if (bio != null) ...[
-          if (expanded) ...[
+          // Garden + wizyty
+          Text(
+            lang == 'pl' ? 'Twój ogród' : 'Your garden',
+            style: TextStyle(fontSize: 9, color: Colors.white.withAlpha(120)),
+          ),
+          Text(
+            lang == 'pl'
+                ? '${summary.visits} wizyt · ${summary.daysInGarden} dni'
+                : '${summary.visits} visits · ${summary.daysInGarden} days',
+            style: const TextStyle(
+                fontSize: 11, color: Colors.white, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 6),
+
+          // Data odkrycia
+          if (isRare && bio != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+              decoration: BoxDecoration(
+                color: kRarityColor[bio.cardRarity]!.withAlpha(40),
+                borderRadius: BorderRadius.circular(7),
+                border: Border.all(
+                    color: kRarityColor[bio.cardRarity]!.withAlpha(120),
+                    width: 0.5),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.auto_awesome,
+                    size: 8, color: kRarityColor[bio.cardRarity]),
+                const SizedBox(width: 4),
+                Text(
+                  '${lang == 'pl' ? 'ODKRYTO' : 'FOUND'}  '
+                  '${_formatDate(summary.firstSeen)}',
+                  style: TextStyle(
+                      fontSize: 8,
+                      color: kRarityColor[bio.cardRarity],
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3),
+                ),
+              ]),
+            )
+          else
+            Text(
+              '${lang == 'pl' ? 'od' : 'since'} '
+              '${_formatDate(summary.firstSeen)}',
+              style: TextStyle(
+                  fontSize: 9, color: Colors.white.withAlpha(100)),
+            ),
+
+          // Statystyki + rodzina — TYLKO w expanded
+          if (bio != null && expanded) ...[
             const SizedBox(height: 12),
             const Divider(color: Colors.white24, height: 1),
             const SizedBox(height: 10),
@@ -389,58 +388,53 @@ class _CardBack extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      lang == 'pl'
-                          ? (kFamilyNamePl[bio.family] ?? bio.family)
-                          : (kFamilyNameEn[bio.family] ?? bio.family),
+              Expanded(child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    lang == 'pl'
+                        ? (kFamilyNamePl[bio.family] ?? bio.family)
+                        : (kFamilyNameEn[bio.family] ?? bio.family),
+                    style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white),
+                  ),
+                  Text(l10n.familyColorNote,
                       style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white),
-                    ),
-                    Text(
-                      l10n.familyColorNote,
-                      style: const TextStyle(
-                          fontSize: 9, color: Colors.white60),
-                    ),
-                  ],
-                ),
-              ),
+                          fontSize: 9, color: Colors.white60)),
+                ],
+              )),
             ]),
             const SizedBox(height: 4),
           ],
-        ],
 
-        const SizedBox(height: 8),
+          const SizedBox(height: 8),
 
-        // Przycisk szczegóły
-        GestureDetector(
-          onTap: onDetailTap,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withAlpha(20),
-              borderRadius: BorderRadius.circular(7),
-              border: Border.all(
-                  color: Colors.white.withAlpha(40), width: 0.5),
+          // Przycisk szczegóły
+          GestureDetector(
+            onTap: onDetailTap,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(20),
+                borderRadius: BorderRadius.circular(7),
+                border: Border.all(
+                    color: Colors.white.withAlpha(40), width: 0.5),
+              ),
+              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Text(lang == 'pl' ? 'Szczegóły' : 'Details',
+                    style: const TextStyle(
+                        fontSize: 10, color: Colors.white,
+                        fontWeight: FontWeight.w500)),
+                const SizedBox(width: 4),
+                const Icon(Icons.arrow_forward_ios, size: 8, color: Colors.white),
+              ]),
             ),
-            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Text(lang == 'pl' ? 'Szczegóły' : 'Details',
-                  style: const TextStyle(
-                      fontSize: 10, color: Colors.white,
-                      fontWeight: FontWeight.w500)),
-              const SizedBox(width: 4),
-              const Icon(Icons.arrow_forward_ios,
-                  size: 8, color: Colors.white),
-            ]),
           ),
-        ),
-      ]),
+        ]),
+      ),
     );
   }
 }
@@ -469,7 +463,7 @@ class _PhotoPlaceholder extends StatelessWidget {
   );
 }
 
-// ── Card shell (wspólny kontener) ──────────────────────────────────────────
+// ── Card shell ─────────────────────────────────────────────────────────────
 
 class _CardShell extends StatelessWidget {
   final List<Color> colors;
@@ -519,6 +513,7 @@ class _CardShell extends StatelessWidget {
               ),
             ),
           ),
+        // ── FIX: Positioned.fill daje Column ograniczoną wysokość ──
         Positioned.fill(
           child: Padding(
             padding: const EdgeInsets.all(10),
@@ -554,7 +549,7 @@ class _RarityBadge extends StatelessWidget {
   );
 }
 
-// ── Stat row z labelką (front) ─────────────────────────────────────────────
+// ── Stat row (front) — label przy lewej, gwiazdki przy prawej ─────────────
 
 class _StatRow extends StatelessWidget {
   final String icon, label;
@@ -567,10 +562,9 @@ class _StatRow extends StatelessWidget {
     child: Row(children: [
       Text(icon, style: const TextStyle(fontSize: 9)),
       const SizedBox(width: 4),
-      SizedBox(
-        width: 50,
-        child: Text(label, style: const TextStyle(
-            fontSize: 8, color: Colors.white70),
+      Expanded(
+        child: Text(label,
+            style: const TextStyle(fontSize: 8, color: Colors.white70),
             overflow: TextOverflow.ellipsis),
       ),
       const SizedBox(width: 4),
@@ -586,7 +580,7 @@ class _StatRow extends StatelessWidget {
   );
 }
 
-// ── Stat desc row (tył karty) ──────────────────────────────────────────────
+// ── Stat desc row (back) ───────────────────────────────────────────────────
 
 class _StatDescRow extends StatelessWidget {
   final String icon, label, description;
@@ -606,8 +600,7 @@ class _StatDescRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: const TextStyle(
-              fontSize: 9, fontWeight: FontWeight.w600,
-              color: Colors.white70)),
+              fontSize: 9, fontWeight: FontWeight.w600, color: Colors.white70)),
           Text(description, style: const TextStyle(
               fontSize: 10, color: Colors.white, height: 1.3)),
         ],
@@ -616,7 +609,7 @@ class _StatDescRow extends StatelessWidget {
   );
 }
 
-// ── Stat dots (locked) ──────────────────────────────────────────────────────
+// ── Stat dots (locked) ─────────────────────────────────────────────────────
 
 class _StatDots extends StatelessWidget {
   final String label;
@@ -625,20 +618,24 @@ class _StatDots extends StatelessWidget {
   const _StatDots({required this.label, required this.count, this.locked = false});
 
   @override
-  Widget build(BuildContext context) => Row(children: [
-    Text(label, style: const TextStyle(fontSize: 8)),
-    const SizedBox(width: 3),
-    ...List.generate(5, (i) => Padding(
-      padding: const EdgeInsets.only(right: 1.5),
-      child: Icon(
-        i < count ? Icons.circle : Icons.circle_outlined,
-        size: 6,
-        color: locked
-            ? Colors.white12
-            : i < count ? Colors.white : Colors.white38,
-      ),
-    )),
-  ]);
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 2),
+    child: Row(children: [
+      Text(label, style: const TextStyle(fontSize: 8)),
+      const SizedBox(width: 4),
+      const Expanded(child: SizedBox()),
+      ...List.generate(5, (i) => Padding(
+        padding: const EdgeInsets.only(right: 1.5),
+        child: Icon(
+          i < count ? Icons.circle : Icons.circle_outlined,
+          size: 6,
+          color: locked
+              ? Colors.white12
+              : i < count ? Colors.white : Colors.white38,
+        ),
+      )),
+    ]),
+  );
 }
 
 // ── Opisy statystyk ────────────────────────────────────────────────────────
@@ -700,7 +697,7 @@ String _rarityDesc(int s, String lang) {
   };
 }
 
-// ── Fallback bird (gdy SVG niedostępny) ───────────────────────────────────
+// ── Fallback bird painter ──────────────────────────────────────────────────
 
 class _FallbackBirdPainter extends CustomPainter {
   final double opacity;
