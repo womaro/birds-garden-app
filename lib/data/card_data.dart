@@ -50,6 +50,46 @@ const kFamilyGradient = {
   'Certhiidae':    [Color(0xFF558B2F), Color(0xFF33691E)],
 };
 
+const Map<String, String> kFamilyNamePl = {
+  'Turdidae'      : 'Drozdowate',
+  'Paridae'       : 'Sikorowate',
+  'Aegithalidae'  : 'Raniuszkowate',
+  'Fringillidae'  : 'Łuszczaki',
+  'Passeridae'    : 'Wróblowate',
+  'Sturnidae'     : 'Szpakowate',
+  'Muscicapidae'  : 'Muchołówkowate',
+  'Sylviidae'     : 'Pokrzewkowate',
+  'Prunellidae'   : 'Płoczkówkowate',
+  'Apodidae'      : 'Jerzykowate',
+  'Hirundinidae'  : 'Jaskółkowate',
+  'Corvidae'      : 'Krukowate',
+  'Columbidae'    : 'Gołębiowate',
+  'Troglodytidae' : 'Strzyżykowate',
+  'Sittidae'      : 'Kowalikowe',
+  'Certhiidae'    : 'Pełzaczkowate',
+  'Emberizidae'   : 'Trznadlowate',
+};
+
+const Map<String, String> kFamilyNameEn = {
+  'Turdidae'      : 'Thrushes',
+  'Paridae'       : 'Tits',
+  'Aegithalidae'  : 'Long-tailed Tits',
+  'Fringillidae'  : 'Finches',
+  'Passeridae'    : 'Sparrows',
+  'Sturnidae'     : 'Starlings',
+  'Muscicapidae'  : 'Flycatchers',
+  'Sylviidae'     : 'Warblers',
+  'Prunellidae'   : 'Accentors',
+  'Apodidae'      : 'Swifts',
+  'Hirundinidae'  : 'Swallows',
+  'Corvidae'      : 'Corvids',
+  'Columbidae'    : 'Pigeons & Doves',
+  'Troglodytidae' : 'Wrens',
+  'Sittidae'      : 'Nuthatches',
+  'Certhiidae'    : 'Treecreepers',
+  'Emberizidae'   : 'Buntings',
+};
+
 List<Color> familyGradient(String family) =>
     kFamilyGradient[family] ??
     [const Color(0xFF0F6E56), const Color(0xFF085041)];

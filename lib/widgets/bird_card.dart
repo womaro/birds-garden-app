@@ -1,20 +1,23 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:bird_app/l10n/app_localizations.dart';
 import '../data/bird_biology.dart';
 import '../data/card_data.dart';
 import '../models/species_summary.dart';
+import '../providers/locale_provider.dart';
 
-class BirdCard extends StatefulWidget {
+class BirdCard extends ConsumerStatefulWidget {
   final String speciesName;
   final SpeciesSummary? summary;
-  final String lang;
+  final bool expanded;
   final VoidCallback? onDetailTap;
 
   const BirdCard({
     required this.speciesName,
-    required this.lang,
     this.summary,
+    this.expanded = false,
     this.onDetailTap,
     super.key,
   });
@@ -22,10 +25,10 @@ class BirdCard extends StatefulWidget {
   bool get isUnlocked => summary != null;
 
   @override
-  State<BirdCard> createState() => _BirdCardState();
+  ConsumerState<BirdCard> createState() => _BirdCardState();
 }
 
-class _BirdCardState extends State<BirdCard>
+class _BirdCardState extends ConsumerState<BirdCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _flipCtrl;
   late Animation<double> _flipAnim;
@@ -68,6 +71,7 @@ class _BirdCardState extends State<BirdCard>
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(localeProvider).languageCode;
     return GestureDetector(
       onTap: _onTap,
       child: AnimatedBuilder(
@@ -87,14 +91,15 @@ class _BirdCardState extends State<BirdCard>
                     child: _CardBack(
                       speciesName: widget.speciesName,
                       summary: widget.summary!,
-                      lang: widget.lang,
+                      lang: lang,
+                      expanded: widget.expanded,
                       onDetailTap: widget.onDetailTap,
                     ),
                   )
                 : _CardFront(
                     speciesName: widget.speciesName,
                     summary: widget.summary,
-                    lang: widget.lang,
+                    lang: lang,
                     shimmerCtrl: _shimmerCtrl,
                   ),
           );
@@ -120,6 +125,7 @@ class _CardFront extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n   = AppLocalizations.of(context)!;
     final bio    = kBirdBiology[speciesName];
     final colors = isUnlocked && bio != null
         ? familyGradient(bio.family)
@@ -171,7 +177,28 @@ class _CardFront extends StatelessWidget {
             letterSpacing: 1.0,
           ),
         ),
+        // Family badge
+        if (isUnlocked && bio != null) ...[
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.18),
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: Text(
+              lang == 'pl'
+                  ? (kFamilyNamePl[bio.family] ?? bio.family)
+                  : (kFamilyNameEn[bio.family] ?? bio.family),
+              style: const TextStyle(
+                  fontSize: 8,
+                  color: Colors.white70,
+                  letterSpacing: 0.3),
+            ),
+          ),
+        ],
         const SizedBox(height: 2),
+
         // Nazwa
         Text(displayName,
             style: TextStyle(
@@ -186,11 +213,9 @@ class _CardFront extends StatelessWidget {
                   fontStyle: FontStyle.italic),
               maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 6),
-          _StatDots(label: '⚡', count: bio.sizeStars),
-          const SizedBox(height: 2),
-          _StatDots(label: '🎵', count: bio.songStars),
-          const SizedBox(height: 2),
-          _StatDots(label: '👁', count: bio.rarityStars),
+          _StatRow(icon: '⚡', label: l10n.statSize,   stars: bio.sizeStars),
+          _StatRow(icon: '🎵', label: l10n.statSong,   stars: bio.songStars),
+          _StatRow(icon: '👁', label: l10n.statRarity, stars: bio.rarityStars),
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
@@ -226,10 +251,12 @@ class _CardBack extends StatelessWidget {
   final String speciesName;
   final SpeciesSummary summary;
   final String lang;
+  final bool expanded;
   final VoidCallback? onDetailTap;
   const _CardBack({
     required this.speciesName, required this.summary,
-    required this.lang, required this.onDetailTap,
+    required this.lang, required this.expanded,
+    required this.onDetailTap,
   });
 
   String _formatDate(DateTime dt) {
@@ -243,6 +270,7 @@ class _CardBack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n   = AppLocalizations.of(context)!;
     final bio    = kBirdBiology[speciesName];
     final isRare = bio != null &&
         bio.cardRarity.index >= CardRarity.rare.index;
@@ -259,14 +287,15 @@ class _CardBack extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
         // Zdjęcie / placeholder
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(
+            height: expanded ? 140 : 80,
+            width: double.infinity,
             child: hasPhoto
                 ? Image.asset(
                     birdPhotoPath(speciesName),
                     fit: BoxFit.cover,
-                    width: double.infinity,
                     errorBuilder: (_, __, ___) => _PhotoPlaceholder(lang: lang),
                   )
                 : _PhotoPlaceholder(lang: lang),
@@ -323,6 +352,68 @@ class _CardBack extends StatelessWidget {
             '${_formatDate(summary.firstSeen)}',
             style: TextStyle(fontSize: 9, color: Colors.white.withAlpha(100)),
           ),
+
+        // ── Statystyki z opisami (tylko expanded) ────────────
+        if (bio != null) ...[
+          if (expanded) ...[
+            const SizedBox(height: 12),
+            const Divider(color: Colors.white24, height: 1),
+            const SizedBox(height: 10),
+            _StatDescRow(
+              icon: '⚡',
+              label: l10n.statSize,
+              description: _sizeDesc(bio.sizeStars, lang),
+            ),
+            const SizedBox(height: 6),
+            _StatDescRow(
+              icon: '🎵',
+              label: l10n.statSong,
+              description: _songDesc(bio.songStars, lang),
+            ),
+            const SizedBox(height: 6),
+            _StatDescRow(
+              icon: '👁',
+              label: l10n.statRarity,
+              description: _rarityDesc(bio.rarityStars, lang),
+            ),
+            const SizedBox(height: 12),
+            const Divider(color: Colors.white24, height: 1),
+            const SizedBox(height: 8),
+            Row(children: [
+              Container(
+                width: 12, height: 12,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                      colors: familyGradient(bio.family)),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lang == 'pl'
+                          ? (kFamilyNamePl[bio.family] ?? bio.family)
+                          : (kFamilyNameEn[bio.family] ?? bio.family),
+                      style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white),
+                    ),
+                    Text(
+                      l10n.familyColorNote,
+                      style: const TextStyle(
+                          fontSize: 9, color: Colors.white60),
+                    ),
+                  ],
+                ),
+              ),
+            ]),
+            const SizedBox(height: 4),
+          ],
+        ],
 
         const SizedBox(height: 8),
 
@@ -428,7 +519,12 @@ class _CardShell extends StatelessWidget {
               ),
             ),
           ),
-        Padding(padding: const EdgeInsets.all(10), child: child),
+        Positioned.fill(
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: child,
+          ),
+        ),
       ]),
     ),
   );
@@ -458,7 +554,69 @@ class _RarityBadge extends StatelessWidget {
   );
 }
 
-// ── Stat dots ──────────────────────────────────────────────────────────────
+// ── Stat row z labelką (front) ─────────────────────────────────────────────
+
+class _StatRow extends StatelessWidget {
+  final String icon, label;
+  final int stars;
+  const _StatRow({required this.icon, required this.label, required this.stars});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 3),
+    child: Row(children: [
+      Text(icon, style: const TextStyle(fontSize: 9)),
+      const SizedBox(width: 4),
+      SizedBox(
+        width: 50,
+        child: Text(label, style: const TextStyle(
+            fontSize: 8, color: Colors.white70),
+            overflow: TextOverflow.ellipsis),
+      ),
+      const SizedBox(width: 4),
+      ...List.generate(5, (i) => Padding(
+        padding: const EdgeInsets.only(right: 2),
+        child: Icon(
+          i < stars ? Icons.circle : Icons.circle_outlined,
+          size: 6,
+          color: Colors.white.withAlpha(i < stars ? 230 : 70),
+        ),
+      )),
+    ]),
+  );
+}
+
+// ── Stat desc row (tył karty) ──────────────────────────────────────────────
+
+class _StatDescRow extends StatelessWidget {
+  final String icon, label, description;
+  const _StatDescRow({
+    required this.icon,
+    required this.label,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(icon, style: const TextStyle(fontSize: 11)),
+      const SizedBox(width: 6),
+      Expanded(child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(
+              fontSize: 9, fontWeight: FontWeight.w600,
+              color: Colors.white70)),
+          Text(description, style: const TextStyle(
+              fontSize: 10, color: Colors.white, height: 1.3)),
+        ],
+      )),
+    ],
+  );
+}
+
+// ── Stat dots (locked) ──────────────────────────────────────────────────────
 
 class _StatDots extends StatelessWidget {
   final String label;
@@ -481,6 +639,65 @@ class _StatDots extends StatelessWidget {
       ),
     )),
   ]);
+}
+
+// ── Opisy statystyk ────────────────────────────────────────────────────────
+
+String _sizeDesc(int s, String lang) {
+  if (lang == 'pl') return switch (s) {
+    1 => 'Miniaturowy — mały jak kciuk',
+    2 => 'Mały ptak ogrodu',
+    3 => 'Średniej wielkości',
+    4 => 'Duży i wyraźny',
+    5 => 'Jeden z największych w ogrodzie',
+    _ => '',
+  };
+  return switch (s) {
+    1 => 'Tiny — smaller than your fist',
+    2 => 'Small garden bird',
+    3 => 'Medium sized',
+    4 => 'Large and conspicuous',
+    5 => 'One of the largest in the garden',
+    _ => '',
+  };
+}
+
+String _songDesc(int s, String lang) {
+  if (lang == 'pl') return switch (s) {
+    1 => 'Cichy, skromny głos',
+    2 => 'Prosta, powtarzalna melodia',
+    3 => 'Przyjemny, rozpoznawalny śpiew',
+    4 => 'Bogaty i melodyjny śpiew',
+    5 => 'Wirtuoz — jeden z najpiękniejszych śpiewaków',
+    _ => '',
+  };
+  return switch (s) {
+    1 => 'Quiet, modest voice',
+    2 => 'Simple, repetitive melody',
+    3 => 'Pleasant, recognizable song',
+    4 => 'Rich and melodious song',
+    5 => 'Virtuoso — one of the finest songsters',
+    _ => '',
+  };
+}
+
+String _rarityDesc(int s, String lang) {
+  if (lang == 'pl') return switch (s) {
+    1 => 'Codziennie w każdym ogrodzie',
+    2 => 'Regularny gość ogrodu',
+    3 => 'Pojawia się kilka razy w roku',
+    4 => 'Rzadki — wyjątkowe spotkanie',
+    5 => 'Legendarny — raz w życiu w ogrodzie',
+    _ => '',
+  };
+  return switch (s) {
+    1 => 'Daily in every garden',
+    2 => 'Regular garden visitor',
+    3 => 'Appears a few times a year',
+    4 => 'Rare — a special encounter',
+    5 => 'Legendary — once in a lifetime',
+    _ => '',
+  };
 }
 
 // ── Fallback bird (gdy SVG niedostępny) ───────────────────────────────────

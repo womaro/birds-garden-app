@@ -138,5 +138,11 @@
   "onboarding4Demo": "For now you can browse demo data from our garden.",
 
   "trendTitle": "trend · last 7 days",
-  "rankingTitle": "ranking · this week"
+  "rankingTitle": "ranking · this week",
+
+  "statSize": "Size",
+  "statSong": "Song richness",
+  "statRarity": "Rarity",
+  "statFamily": "Family",
+  "familyColorNote": "Card color represents the bird's taxonomic family"
 }

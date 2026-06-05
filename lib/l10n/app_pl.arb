@@ -138,5 +138,11 @@
   "onboarding4Demo": "Na razie możesz przeglądać dane demo z naszego ogrodu.",
 
   "trendTitle": "trend · ostatnie 7 dni",
-  "rankingTitle": "ranking · ten tydzień"
+  "rankingTitle": "ranking · ten tydzień",
+
+  "statSize": "Rozmiar",
+  "statSong": "Bogactwo głosu",
+  "statRarity": "Rzadkość",
+  "statFamily": "Rodzina",
+  "familyColorNote": "Kolor karty oznacza rodzinę taksonomiczną ptaka"
 }

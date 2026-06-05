@@ -7,6 +7,7 @@ class SpeciesSummary {
   final int daysInGarden;
   final bool isRare;
   final int starRating;
+  final String? latestPhotoUrl;
 
   const SpeciesSummary({
     required this.name,
@@ -17,6 +18,7 @@ class SpeciesSummary {
     required this.daysInGarden,
     required this.isRare,
     required this.starRating,
+    this.latestPhotoUrl,
   });
 
   factory SpeciesSummary.fromJson(Map<String, dynamic> j) {
@@ -31,14 +33,15 @@ class SpeciesSummary {
         : 1;
 
     return SpeciesSummary(
-      name:         j['species'] as String,
-      visits:       visits,
-      lastSeen:     DateTime.parse(j['last_seen']  as String),
-      firstSeen:    DateTime.parse(j['first_seen'] as String),
-      favoriteHour: '${h.toString().padLeft(2, '0')}:00',
-      daysInGarden: days,
-      isRare:       visits < 5,
-      starRating:   stars,
+      name:           j['species'] as String,
+      visits:         visits,
+      lastSeen:       DateTime.parse(j['last_seen']  as String),
+      firstSeen:      DateTime.parse(j['first_seen'] as String),
+      favoriteHour:   '${h.toString().padLeft(2, '0')}:00',
+      daysInGarden:   days,
+      isRare:         visits < 5,
+      starRating:     stars,
+      latestPhotoUrl: j['latest_photo_url'] as String?,
     );
   }
 }

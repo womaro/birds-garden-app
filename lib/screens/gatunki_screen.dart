@@ -10,6 +10,7 @@ import '../providers/locale_provider.dart';
 import '../providers/species_provider.dart';
 import '../theme.dart';
 import '../widgets/bird_card.dart';
+import '../widgets/expanded_cards_view.dart';
 
 class GatunkiScreen extends ConsumerStatefulWidget {
   const GatunkiScreen({super.key});
@@ -107,7 +108,7 @@ class _GatunkiScreenState extends ConsumerState<GatunkiScreen> {
               error: (e, _) => Center(child: Text('$e')),
               data: (species) => _isCardView
                   ? _CardGrid(
-                      detectedSpecies: species, lang: lang,
+                      detectedSpecies: species,
                       onDetailTap: (s) =>
                           context.push('/gatunki/detail', extra: s),
                     )
@@ -151,19 +152,17 @@ class _ToggleBtn extends StatelessWidget {
 
 class _CardGrid extends StatelessWidget {
   final List<SpeciesSummary> detectedSpecies;
-  final String lang;
   final void Function(SpeciesSummary) onDetailTap;
   const _CardGrid({
-    required this.detectedSpecies, required this.lang,
+    required this.detectedSpecies,
     required this.onDetailTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final detectedMap = {for (final s in detectedSpecies) s.name: s};
-    final unlocked =
-        kAllPolishGardenBirds.where((n) => detectedMap.containsKey(n)).toList();
-    final all = unlocked;
+    final summaryMap = {for (final s in detectedSpecies) s.name: s};
+    final all =
+        kAllPolishGardenBirds.where((n) => summaryMap.containsKey(n)).toList();
 
     return GridView.builder(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -175,13 +174,23 @@ class _CardGrid extends StatelessWidget {
       ),
       itemCount: all.length,
       itemBuilder: (_, i) {
-        final name    = all[i];
-        final summary = detectedMap[name];
-        return BirdCard(
-          speciesName: name,
-          summary: summary,
-          lang: lang,
-          onDetailTap: summary != null ? () => onDetailTap(summary) : null,
+        final name = all[i];
+        return GestureDetector(
+          onDoubleTap: () => Navigator.push(
+            context,
+            ExpandedCardsRoute(
+              initialIndex: i,
+              cards: all,
+              summaryMap: summaryMap,
+            ),
+          ),
+          child: BirdCard(
+            speciesName: name,
+            summary: summaryMap[name],
+            onDetailTap: summaryMap[name] != null
+                ? () => onDetailTap(summaryMap[name]!)
+                : null,
+          ),
         );
       },
     );
