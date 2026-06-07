@@ -51,15 +51,20 @@ class ExpandedCardsView extends StatefulWidget {
 class _ExpandedCardsViewState extends State<ExpandedCardsView>
     with SingleTickerProviderStateMixin {
 
-  late PageController _pageCtrl;
-  late AnimationController _scaleCtrl;
-  late Animation<double> _scaleAnim;
-  late ValueNotifier<int> _currentPage;
-  final GlobalKey _cardRepaintKey = GlobalKey();
+  late PageController        _pageCtrl;
+  late AnimationController   _scaleCtrl;
+  late Animation<double>     _scaleAnim;
+  late ValueNotifier<int>    _currentPage;
+  // ── Stały klucz per karta — fix share ──────────────────────────────────
+  late final List<GlobalKey> _cardKeys;
 
   @override
   void initState() {
     super.initState();
+    // Osobny GlobalKey dla każdej karty — nigdy nie zmienia się przy scroll
+    _cardKeys = List.generate(
+        widget.cards.length, (_) => GlobalKey());
+
     _pageCtrl = PageController(
       initialPage: widget.initialIndex,
       viewportFraction: 0.85,
@@ -113,7 +118,8 @@ class _ExpandedCardsViewState extends State<ExpandedCardsView>
                 color: Colors.white.withOpacity(0.15),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close, color: Colors.white, size: 20),
+              child: const Icon(Icons.close,
+                  color: Colors.white, size: 20),
             ),
           ),
         ),
@@ -127,37 +133,34 @@ class _ExpandedCardsViewState extends State<ExpandedCardsView>
               child: PageView.builder(
                 controller: _pageCtrl,
                 itemCount: widget.cards.length,
-                itemBuilder: (ctx, i) => ValueListenableBuilder<int>(
-                  valueListenable: _currentPage,
-                  builder: (_, page, __) {
-                    final isCurrent = i == page;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: GestureDetector(
-                        onDoubleTap: _dismiss,
-                        child: RepaintBoundary(
-                          key: isCurrent ? _cardRepaintKey : null,
-                          child: BirdCard(
-                            speciesName: widget.cards[i],
-                            summary: widget.summaryMap[widget.cards[i]],
-                            expanded: true,
-                            onDetailTap: () {
-                              final summary = widget.summaryMap[widget.cards[i]];
-                              _dismiss().then((_) {
-                                if (context.mounted) {
-                                  context.push(
-                                    '/gatunki/detail',
-                                    extra: summary,
-                                  );
-                                }
-                              });
-                            },
-                          ),
+                itemBuilder: (ctx, i) {
+                  final summary = widget.summaryMap[widget.cards[i]];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: GestureDetector(
+                      onDoubleTap: _dismiss,
+                      child: RepaintBoundary(
+                        key: _cardKeys[i],   // ← stały klucz per indeks
+                        child: BirdCard(
+                          speciesName: widget.cards[i],
+                          summary: summary,
+                          expanded: true,
+                          // ── Fix Szczegóły ─────────────────
+                          onDetailTap: summary != null ? () {
+                            _dismiss().then((_) {
+                              if (ctx.mounted) {
+                                ctx.push(
+                                  '/gatunki/detail',
+                                  extra: summary,
+                                );
+                              }
+                            });
+                          } : null,
                         ),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -173,7 +176,7 @@ class _ExpandedCardsViewState extends State<ExpandedCardsView>
               builder: (_, page, __) => BirdCardShareButton(
                 speciesName: widget.cards[page],
                 summary: widget.summaryMap[widget.cards[page]],
-                captureKey: _cardRepaintKey,
+                captureKey: _cardKeys[page],  // ← klucz aktualnej karty
               ),
             ),
             const SizedBox(height: 8),
@@ -181,7 +184,8 @@ class _ExpandedCardsViewState extends State<ExpandedCardsView>
               'tap → flip  ·  podwójne tap → zamknij',
               textAlign: TextAlign.center,
               style: TextStyle(
-                  fontSize: 10, color: Colors.white.withOpacity(0.4)),
+                  fontSize: 10,
+                  color: Colors.white.withOpacity(0.4)),
             ),
           ]),
         ),
