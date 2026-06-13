@@ -49,3 +49,14 @@ app.*.map.json
 .fvm/
 # Generated localizations
 lib/l10n/app_localizations*.dart
+
+# backend (FastAPI / VPS)
+backend/.env
+backend/models/
+backend/photos/
+backend/raw/
+backend/dataset/
+backend/own/
+runs/
+**/__pycache__/
+*.pyc
